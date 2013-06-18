@@ -46,7 +46,7 @@
               <columns>
                 <TableColumn editable="false" id="" prefWidth="75.0" style="width: 30%;" text="From" fx:id="fromCol" />
                 <TableColumn editable="false" prefWidth="75.0" style="width: 50%;" text="Subject" fx:id="subjCol" />
-                <TableColumn editable="false" prefWidth="75.0" sortType="DESCENDING" style="" text="Date" fx:id="dateCol" />
+                <TableColumn editable="false" prefWidth="75.0" sortType="ASCENDING" style="" text="Date" fx:id="dateCol" />
               </columns>
             </TableView>
           </children>

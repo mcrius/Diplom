@@ -34,6 +34,7 @@ public class MessageDTO implements Serializable{
     private boolean read;
     private boolean textIsHtml = false;
 
+
     public MessageDTO(int id, String from, String recipient, String cc, String body, String[] attachmentNames, Date receivedDate, Date sentDate, boolean read) {
         this.id = id;
         this.from = from;
@@ -54,7 +55,7 @@ public class MessageDTO implements Serializable{
             this.from = m.getFrom()[0].toString();
 //            this.from = Arrays.toString(m.getFrom());
 //                    .substring(1, Arrays.toString(m.getRecipients(Message.RecipientType.TO)).length() -1);
-            this.recipient = Arrays.toString(m.getRecipients(Message.RecipientType.TO)).replaceAll("[", "").replaceAll("]", "");
+            this.recipient = Arrays.toString(m.getRecipients(Message.RecipientType.TO)).replaceAll("\\[", "").replaceAll("\\]", "");
             this.cc = Arrays.toString(m.getRecipients(Message.RecipientType.TO));
 //                    .substring(1, Arrays.toString(m.getRecipients(Message.RecipientType.CC)).length()-1 );
             this.receivedDate = m.getReceivedDate();
@@ -62,7 +63,7 @@ public class MessageDTO implements Serializable{
             this.subject = m.getSubject();
             this.body = getText(m);
             this.read = m.isExpunged();
-            this.attachmentNames = getAttachmentNames(m);
+            this.attachmentNames = createAttachmentNames(m);
         } catch (MessagingException | IOException ex) {
             Logger.getLogger(MessageDTO.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -199,29 +200,34 @@ public class MessageDTO implements Serializable{
         
     }
     
-    private String[] getAttachmentNames(Message m){
+    private String[] createAttachmentNames(Part m){
         ArrayList<String> files = new ArrayList<>();
-        if (m!=null) {
-            
-        
-        
         try {
-            if (m.getDescription()!=null && !m.getDisposition().equalsIgnoreCase(Part.ATTACHMENT)) {
-                Multipart multipart = (Multipart) m.getContent();
-                for (int i = 0; i < multipart.getCount(); i++) {
-                    BodyPart part = multipart.getBodyPart(i);
-                    if (part.getDisposition().equalsIgnoreCase(Part.ATTACHMENT)) {
-                        files.add(part.getFileName());
+            if (m.isMimeType("multipart/*")) {
+                try {
+                    Multipart mime = (Multipart) m.getContent();
+                    for (int i = 0; i < mime.getCount(); i++) {
+                        BodyPart bp = mime.getBodyPart(i);
+                        if (bp.isMimeType("multipart/*")) {
+                            Multipart inner = (Multipart) bp.getContent();
+                            for (int j = 0; j < inner.getCount(); j++) {
+                                if (inner.getBodyPart(j).getDisposition()!=null && inner.getBodyPart(j).getDisposition().equalsIgnoreCase(Part.ATTACHMENT)) {
+                                    files.add(inner.getBodyPart(j).getFileName());
+                                    //TODO hashmap to get stream easily with key fileName
+                                }
+                            }
+                        }else{
+                            if (bp.getDisposition()!=null && bp.getDisposition().equalsIgnoreCase(Part.ATTACHMENT)) {
+                                files.add(bp.getFileName());
+                            }
+                        }
                     }
+                } catch (        MessagingException | IOException ex) {
+                    Logger.getLogger(MessageDTO.class.getName()).log(Level.SEVERE, null, ex);
                 }
-            }else{
-                files.add(m.getFileName());
             }
-            
-            
-        } catch (MessagingException | IOException ex) {
+        } catch (MessagingException ex) {
             Logger.getLogger(MessageDTO.class.getName()).log(Level.SEVERE, null, ex);
-        }
         }
         return files.toArray(new String[files.size()]);
     }
