@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane id="AnchorPane" fx:id="ap" cache="true" cacheHint="SPEED" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="200.0" prefWidth="320.0" xmlns:fx="http://javafx.com/fxml" fx:controller="mailtest.MainController">
+  <children>
+    <Button fx:id="button" layoutX="245.0" layoutY="148.0" onAction="#handleButtonAction" text="Check" />
+    <GridPane cache="true" cacheHint="SPEED" layoutX="76.0" layoutY="14.0" prefHeight="61.0" prefWidth="222.0">
+      <children>
+        <TextField fx:id="userField" prefWidth="200.0" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+        <PasswordField fx:id="passField" onAction="#handleButtonAction" prefWidth="200.0" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+      </children>
+      <columnConstraints>
+        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+      </columnConstraints>
+      <rowConstraints>
+        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+        <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+      </rowConstraints>
+    </GridPane>
+    <Label layoutX="14.0" layoutY="22.0" text="E-mail" />
+    <Label layoutX="14.0" layoutY="52.0" text="Password" />
+    <Label fx:id="notification" layoutX="14.0" layoutY="100.0">
+      <contextMenu>
+        <ContextMenu>
+          <items>
+            <MenuItem mnemonicParsing="false" onAction="#dismiss" text="Dismiss" />
+          </items>
+        </ContextMenu>
+      </contextMenu>
+    </Label>
+    <ProgressIndicator fx:id="pi" layoutX="270.0" layoutY="151.0" opacity="0.0" />
+    <Button cache="true" cacheHint="SPEED" layoutX="160.0" layoutY="148.0" mnemonicParsing="false" text="Send Mail" />
+  </children>
+</AnchorPane>
