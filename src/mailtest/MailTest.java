@@ -4,7 +4,6 @@
  */
 package mailtest;
 
-import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -21,18 +20,17 @@ import javafx.application.Preloader;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import javax.mail.FetchProfile;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
-import javax.mail.NoSuchProviderException;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.swing.JOptionPane;
 import mailtest.dto.MessageDTO;
 import mailtest.MainScene.MainSceneController;
+import mailtest.dto.SettingsDTO;
 
 /**
  *
@@ -83,8 +81,19 @@ public class MailTest extends Application {
 
     @Override
     public void init() {
+        Properties props = null;
+        Platform.setImplicitExit(true);
         boolean created = false;
         ObjectInputStream objectInputStream = null;
+        if (SettingsDTO.checkFile()) {
+            SettingsDTO dto = null;
+            try {
+                dto = SettingsDTO.readDtoFromFile();
+                props = dto.getConnectionProperties();
+            } catch (    IOException | ClassNotFoundException ex) {
+                Logger.getLogger(MailTest.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        
         try {
             File messageFile = new File("test.test");
             if (!messageFile.exists()) {
@@ -103,20 +112,11 @@ public class MailTest extends Application {
                 System.out.println("Set messages");
             }
             notifyPreloader(new Preloader.ProgressNotification(-1d));
-
-            Properties props = System.getProperties();
-            props.setProperty("mail.smtp.auth", "true");
-            props.setProperty("mail.smtp.starttls.enable", "true");
-            props.setProperty("mail.smtp.host", "smtp.gmail.com");
-            props.setProperty("mail.smtp.port", "587");
-            props.setProperty("mail.store.protocol", "imaps");
-            props.setProperty("mail.imap.host", "imap.gmail.com");
-            props.setProperty("mail.imap.port", "993");
-            props.setProperty("mail.imap.timeout", "2000");
+            
             Session s = Session.getDefaultInstance(props, null);
-            store = s.getStore("imaps");
+            store = s.getStore(props.getProperty("mail.store.protocol"));
             try {
-                store.connect("imap.gmail.com", "rius.ns@gmail.com", MailTest.PASS);
+                store.connect(props.getProperty("mail.store.host"), dto.getUsername(), dto.getPassword());
                 folders = findFolders();
                 inbox = store.getFolder("INBOX");
                 inbox.open(Folder.READ_WRITE);
@@ -146,6 +146,7 @@ public class MailTest extends Application {
                 out.flush();
                 System.out.println("Messages written");
             } catch (MessagingException e) {
+                Logger.getLogger(MailTest.class.getName()).log(Level.SEVERE, null, e);
                 JOptionPane.showMessageDialog(null, "You currently have no internet connection.\nYou will be able to read only locally saved messages.");
             }
         } catch (IOException | ClassNotFoundException | MessagingException ex) {
@@ -158,6 +159,9 @@ public class MailTest extends Application {
             } catch (IOException ex) {
                 Logger.getLogger(MailTest.class.getName()).log(Level.SEVERE, null, ex);
             }
+        }
+        }else{
+            SettingsDTO.createFile();
         }
     }
 

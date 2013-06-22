@@ -19,10 +19,12 @@ import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
@@ -37,12 +39,14 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.web.WebView;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
+import javafx.stage.Stage;
 import javax.mail.Folder;
-import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.swing.JOptionPane;
 import mailtest.MailTest;
+import mailtest.SettingsController;
 import mailtest.dto.MessageDTO;
+import mailtest.dto.SettingsDTO;
 import mailtest.runnables.OpenFolderRun;
 
 /**
@@ -88,7 +92,15 @@ public class MainSceneController implements Initializable {
 
     public void init() {
         indicator.setVisible(true);
-        tree.setRoot(new TreeItem<>("rius.ns@gmail.com"));
+        if (SettingsDTO.checkFile()) {
+            try {
+                tree.setRoot(new TreeItem<>(SettingsDTO.readDtoFromFile().getUsername()));
+            } catch (IOException | ClassNotFoundException ex) {
+                Logger.getLogger(MainSceneController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }else{
+            tree.setVisible(false);
+        }
         Platform.runLater(new Runnable() {
 
             @Override
@@ -267,5 +279,19 @@ public class MainSceneController implements Initializable {
                 Logger.getLogger(MainSceneController.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+    }
+    
+    
+    public void showSettingsScene(ActionEvent e){
+        try {
+            Parent root = FXMLLoader.load(SettingsController.class.getResource("SettingsScene.fxml"));
+            Stage stage  = new Stage();
+            Scene scene = new Scene(root);
+            stage.setScene(scene);
+            stage.showAndWait();
+        } catch (IOException ex) {
+            Logger.getLogger(MainSceneController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
     }
 }
