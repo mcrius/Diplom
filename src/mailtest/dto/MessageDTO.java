@@ -5,7 +5,10 @@
 package mailtest.dto;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -16,6 +19,7 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
+import mailtest.MailTest;
 
 /**
  *
@@ -50,6 +54,7 @@ public class MessageDTO implements Serializable{
     
     
     public MessageDTO(Message m){
+//        DateFormat df = new SimpleDateFormat("HH:mm dd-MM-yyyy");
         try {
             this.id = m.getMessageNumber();
             this.from = m.getFrom()[0].toString();
@@ -231,6 +236,50 @@ public class MessageDTO implements Serializable{
         }
         return files.toArray(new String[files.size()]);
     }
-
     
+    public InputStream[] getAttachmentStreams(String[] fileNames) {
+        ArrayList<InputStream> streams = new ArrayList<>();
+        try {
+
+            Part m = MailTest.getInbox().getMessage(this.id);
+            try {
+                if (m.isMimeType("multipart/*")) {
+                    try {
+                        Multipart mime = (Multipart) m.getContent();
+                        for (int i = 0; i < mime.getCount(); i++) {
+                            BodyPart bp = mime.getBodyPart(i);
+                            if (bp.isMimeType("multipart/*")) {
+                                Multipart inner = (Multipart) bp.getContent();
+                                for (int j = 0; j < inner.getCount(); j++) {
+                                    if (inner.getBodyPart(j).getDisposition() != null && inner.getBodyPart(j).getDisposition().equalsIgnoreCase(Part.ATTACHMENT)) {
+                                        for (int k = 0; k < fileNames.length; k++) {
+                                            if (inner.getBodyPart(j).getFileName().equals(fileNames[k])) {
+                                                streams.add(inner.getBodyPart(j).getInputStream());
+                                            }
+                                        }
+                                    }
+                                }
+                            } else {
+                                if (bp.getDisposition() != null && bp.getDisposition().equalsIgnoreCase(Part.ATTACHMENT)) {
+                                    for (int k = 0; k < fileNames.length; k++) {
+                                        if (bp.getFileName().equals(fileNames[k])) {
+                                            streams.add(bp.getInputStream());
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } catch (MessagingException | IOException ex) {
+                        Logger.getLogger(MessageDTO.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            } catch (MessagingException ex) {
+                Logger.getLogger(MessageDTO.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+        } catch (MessagingException ex) {
+            Logger.getLogger(MessageDTO.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return streams.toArray(new InputStream[streams.size()]);
+    }
 }

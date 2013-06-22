@@ -21,6 +21,7 @@ import javafx.application.Preloader;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 import javax.mail.FetchProfile;
 import javax.mail.Folder;
@@ -31,7 +32,7 @@ import javax.mail.Session;
 import javax.mail.Store;
 import javax.swing.JOptionPane;
 import mailtest.dto.MessageDTO;
-import mailtest.sendScene.SendController;
+import mailtest.MainScene.MainSceneController;
 
 /**
  *
@@ -45,6 +46,40 @@ public class MailTest extends Application {
     public static Message[] getMessages() {
         return messages;
     }
+    private static Folder inbox;
+    
+    private static Store store;
+    private static Folder[] folders;
+
+    public static Folder[] getFolders() {
+        return folders;
+    }
+
+    public static Store getStore() {
+        return store;
+    }
+    
+    
+    
+    private Folder[] findFolders() {
+        try {
+            Folder[] list = store.getDefaultFolder().list();
+            for (int i = 0; i < list.length; i++) {
+                list[i].list();
+            }
+            return list;
+        } catch (MessagingException ex) {
+            Logger.getLogger(MailTest.class.getName()).log(Level.SEVERE, null, ex);
+            return null;
+        }
+    }
+    
+    
+
+    public static Folder getInbox() {
+        return inbox;
+    }
+    private List<MessageDTO> old;
 
     @Override
     public void init() {
@@ -63,12 +98,12 @@ public class MailTest extends Application {
                 objectInputStream = new ObjectInputStream(new FileInputStream(messageFile));
             }
             if (messageFile.length() > 20) {
-                List<MessageDTO> old = (List<MessageDTO>) objectInputStream.readObject();
-                SendController.setMessages(old);
+                old = (List<MessageDTO>) objectInputStream.readObject();
+                MainSceneController.setMessages(old);
                 System.out.println("Set messages");
             }
             notifyPreloader(new Preloader.ProgressNotification(-1d));
-            
+
             Properties props = System.getProperties();
             props.setProperty("mail.smtp.auth", "true");
             props.setProperty("mail.smtp.starttls.enable", "true");
@@ -79,25 +114,35 @@ public class MailTest extends Application {
             props.setProperty("mail.imap.port", "993");
             props.setProperty("mail.imap.timeout", "2000");
             Session s = Session.getDefaultInstance(props, null);
-            Store store = s.getStore("imaps");
+            store = s.getStore("imaps");
             try {
                 store.connect("imap.gmail.com", "rius.ns@gmail.com", MailTest.PASS);
-                Folder inbox = store.getFolder("INBOX");
+                folders = findFolders();
+                inbox = store.getFolder("INBOX");
                 inbox.open(Folder.READ_WRITE);
-            if (inbox.hasNewMessages()) {
-                messages = inbox.getMessages(inbox.getMessageCount() - inbox.getUnreadMessageCount(), inbox.getMessageCount());
+                System.out.println(inbox.hasNewMessages());
+                if (inbox.hasNewMessages()) {
+                    messages = inbox.getMessages(inbox.getMessageCount() - inbox.getUnreadMessageCount(), inbox.getMessageCount());
 //                messages = inbox.getMessages(inbox.getMessageCount() - 25, inbox.getMessageCount());
-                FetchProfile fp = new FetchProfile();
-                fp.add(FetchProfile.Item.ENVELOPE);
-                inbox.fetch(messages, fp);
-            }
+                    FetchProfile fp = new FetchProfile();
+                    fp.add(FetchProfile.Item.ENVELOPE);
+                    inbox.fetch(messages, fp);
+                }
+                if (old.get(old.size() -1).getId() < inbox.getMessages()[inbox.getMessageCount() -1].getMessageNumber()) {
+                    int lastSavedId = old.get(old.size() -1 ).getId();
+                    int newestId = inbox.getMessages()[inbox.getMessageCount() -1 ].getMessageNumber();
+                    messages = inbox.getMessages(inbox.getMessageCount() - (newestId - lastSavedId), inbox.getMessageCount());
+                    FetchProfile fp = new FetchProfile();
+                    fp.add(FetchProfile.Item.ENVELOPE);
+                    inbox.fetch(messages, fp);
+                }
                 ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(messageFile));
-                if (SendController.getMessages() != null && messages != null) {
+                if (MainSceneController.getMessages() != null && messages != null) {
                     for (int i = 0; i < messages.length; i++) {
-                        SendController.getMessages().add(new MessageDTO(messages[i]));
+                        MainSceneController.getMessages().add(new MessageDTO(messages[i]));
                     }
                 }
-                out.writeObject(SendController.getMessages());
+                out.writeObject(MainSceneController.getMessages());
                 out.flush();
                 System.out.println("Messages written");
             } catch (MessagingException e) {
@@ -118,12 +163,13 @@ public class MailTest extends Application {
 
     @Override
     public void start(Stage stage) throws Exception {
-        Parent root = FXMLLoader.load(getClass().getResource("sendScene/send.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("MainScene/MainScene.fxml"));
 
         Scene scene = new Scene(root);
 
         stage.setScene(scene);
         stage.setTitle("MailChecker");
+//        stage.getIcons().add(new Image("icon.ico"));
         stage.show();
 
     }
