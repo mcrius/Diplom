@@ -51,7 +51,12 @@ public class OpenFolderRun implements Runnable{
         });
         try {
             folder.open(Folder.READ_WRITE);
-            Message[] all = folder.getMessages();
+            Message[] all = null;
+            if ((folder.getMessageCount()-100) < 0) {
+                all = folder.getMessages();
+            }else{
+                all = folder.getMessages(folder.getMessageCount()-100, folder.getMessageCount());
+            }
             for (int i = 0; i < all.length; i++) {
                 list.add(new MessageDTO(all[i]));
             }

@@ -115,6 +115,7 @@ public class SettingsDTO implements Serializable {
             props.add(new Property("mail.smtp.host", "smtp.gmail.com"));
             props.add(new Property("mail.smtp.port", "587"));
             props.add(new Property("mail.store.protocol", "imaps"));
+            props.add(new Property("mail.transport.protocol", "smtp"));
             props.add(new Property("mail.imap.host", "imap.gmail.com"));
             props.add(new Property("mail.imap.port", "993"));
             props.add(new Property("mail.store.host", "imap.gmail.com"));

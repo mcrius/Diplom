@@ -12,16 +12,16 @@
   <children>
     <GridPane prefHeight="600.0" prefWidth="800.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
       <children>
-        <HTMLEditor fx:id="editor" prefHeight="523.0" prefWidth="800.0" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+        <HTMLEditor prefHeight="523.0" prefWidth="800.0" GridPane.columnIndex="0" GridPane.rowIndex="1" />
         <GridPane prefHeight="70.00009999999747" prefWidth="800.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
           <children>
             <ToolBar minHeight="27.0" prefHeight="27.0" prefWidth="800.0000999999975" GridPane.columnIndex="0" GridPane.rowIndex="0">
               <items>
-                <Button fx:id="sendButton" mnemonicParsing="false" onAction="#sendAction" text="Send" />
+                <Button mnemonicParsing="false" text="Send" />
                 <Separator orientation="VERTICAL" prefHeight="21.0" />
-                <Button mnemonicParsing="false" onAction="#attachAction" text="Attach" />
+                <Button mnemonicParsing="false" text="Attach" />
                 <Separator orientation="VERTICAL" prefHeight="21.0" />
-                <Button fx:id="saveButton" mnemonicParsing="false" onAction="#saveAction" text="Save in Draft" />
+                <Button mnemonicParsing="false" text="Save in Draft" />
               </items>
             </ToolBar>
             <GridPane prefHeight="45.0" style="-fx-background-color: #eee&#10;&#10;" GridPane.columnIndex="0" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1">
@@ -31,12 +31,12 @@
                     <Insets left="15.0" fx:id="x1" />
                   </GridPane.margin>
                 </Label>
-                <TextField fx:id="toField" prefHeight="21.0" prefWidth="691.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
+                <TextField prefHeight="21.0" prefWidth="691.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
                   <tooltip>
                     <Tooltip text="Enter a recipient. If there is more than one you can divide them with a comma" />
                   </tooltip>
                 </TextField>
-                <TextField fx:id="subjectField" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+                <TextField prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
                   <tooltip>
                     <Tooltip text="The subject for the message." />
                   </tooltip>

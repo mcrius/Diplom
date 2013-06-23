@@ -40,6 +40,8 @@
                     <ContextMenu>
                       <items>
                         <MenuItem mnemonicParsing="false" onAction="#openFolderAction" text="Open Folder" />
+                        <MenuItem mnemonicParsing="false" onAction="#addFolderAction" text="Create New Folder" />
+                        <MenuItem mnemonicParsing="false" onAction="#removeFolderAction" text="Remove folder" />
                       </items>
                     </ContextMenu>
                   </contextMenu>
@@ -52,7 +54,7 @@
                   <items>
                     <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="211.0" prefWidth="599.0">
                       <children>
-                        <TableView fx:id="table" cacheHint="SPEED" pickOnBounds="true" prefHeight="204.0" prefWidth="599.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="-1.0">
+                        <TableView fx:id="table" cacheHint="SPEED" pickOnBounds="true" prefHeight="211.0" prefWidth="651.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="-2.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="-1.0">
                           <columns>
                             <TableColumn editable="false" id="" prefWidth="75.0" style="width: 30%;" text="From" fx:id="fromCol" />
                             <TableColumn editable="false" prefWidth="75.0" style="width: 50%;" text="Subject" fx:id="subjCol" />
@@ -61,7 +63,11 @@
                           <contextMenu>
                             <ContextMenu>
                               <items>
-                                <MenuItem mnemonicParsing="false" text="Unspecified Action" />
+                                <MenuItem mnemonicParsing="false" text="Reply" />
+                                <MenuItem mnemonicParsing="false" text="Forward" />
+                                <MenuItem mnemonicParsing="false" onAction="#deleteMessage" text="Delete" />
+                                <MenuItem mnemonicParsing="false" text="Move to folder" />
+                                <MenuItem mnemonicParsing="false" onAction="#archiveMessage" text="Archive" />
                               </items>
                             </ContextMenu>
                           </contextMenu>
@@ -144,12 +150,28 @@
                 <Menu mnemonicParsing="false" text="File">
                   <items>
                     <MenuItem mnemonicParsing="false" onAction="#showSettingsScene" text="Add e-mail account" />
+                    <SeparatorMenuItem mnemonicParsing="false" />
+                    <MenuItem mnemonicParsing="false" onAction="#importAction" text="Import account" />
+                    <MenuItem mnemonicParsing="false" onAction="#exportAction" text="Export account" />
+                    <SeparatorMenuItem mnemonicParsing="false" />
                     <MenuItem mnemonicParsing="false" text="Close" />
                   </items>
                 </Menu>
                 <Menu mnemonicParsing="false" text="Edit">
                   <items>
-                    <MenuItem mnemonicParsing="false" text="Delete" />
+                    <MenuItem mnemonicParsing="false" text="Move to folder" />
+                    <MenuItem mnemonicParsing="false" onAction="#archiveMessage" text="Archive" />
+                    <MenuItem mnemonicParsing="false" onAction="#deleteMessage" text="Delete" />
+                    <MenuItem mnemonicParsing="false" text="Clear Message Cache" />
+                  </items>
+                </Menu>
+                <Menu mnemonicParsing="false" text="Messages">
+                  <items>
+                    <MenuItem mnemonicParsing="false" onAction="#showSendScene" text="Write New" />
+                    <MenuItem mnemonicParsing="false" text="Reply" />
+                    <MenuItem mnemonicParsing="false" text="Forward" />
+                    <SeparatorMenuItem mnemonicParsing="false" />
+                    <MenuItem mnemonicParsing="false" text="Manage templates" />
                   </items>
                 </Menu>
                 <Menu mnemonicParsing="false" text="Help">

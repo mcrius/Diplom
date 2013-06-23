@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package mailtest;
+package mailtest.SettingsScene;
 
 import com.sun.javafx.collections.ObservableListWrapper;
 import java.io.IOException;
@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
@@ -23,6 +24,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import javax.swing.JOptionPane;
+import mailtest.MainScene.MainSceneController;
 import mailtest.dto.SettingsDTO;
 
 /**
@@ -133,6 +135,8 @@ public class SettingsController implements Initializable {
         }
         
         JOptionPane.showMessageDialog(null, "Settings were saved but you need to restart the application so they can take effect.");
+        MainSceneController.t.interrupt();
+        Platform.exit();
     }
     
     public void closeAction(ActionEvent e){
@@ -151,5 +155,6 @@ public class SettingsController implements Initializable {
             return false;
         }
     }
+   
     
 }
