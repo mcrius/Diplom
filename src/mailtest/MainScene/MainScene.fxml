@@ -111,14 +111,6 @@
                                                   </rowConstraints>
                                                 </GridPane>
                                               </center>
-                                              <right>
-                                                <MenuButton alignment="BOTTOM_RIGHT" mnemonicParsing="false" popupSide="LEFT" text="Save">
-                                                  <items>
-                                                    <MenuItem mnemonicParsing="false" onAction="#saveSelectedAttachment" text="Selected" />
-                                                    <MenuItem mnemonicParsing="false" onAction="#saveAllAttachments" text="All" />
-                                                  </items>
-                                                </MenuButton>
-                                              </right>
                                             </BorderPane>
                                           </children>
                                         </AnchorPane>
@@ -126,6 +118,18 @@
                                       <center>
                                         <ListView id="file" fx:id="fileList" maxHeight="1.7976931348623157E308" prefHeight="209.0" prefWidth="504.0" />
                                       </center>
+                                      <top>
+                                        <ToolBar>
+                                          <items>
+                                            <MenuButton alignment="BOTTOM_RIGHT" mnemonicParsing="false" popupSide="RIGHT" text="Save">
+                                              <items>
+                                                <MenuItem mnemonicParsing="false" onAction="#saveSelectedAttachment" text="Selected" />
+                                                <MenuItem mnemonicParsing="false" onAction="#saveAllAttachments" text="All" />
+                                              </items>
+                                            </MenuButton>
+                                          </items>
+                                        </ToolBar>
+                                      </top>
                                     </BorderPane>
                                   </children>
                                 </AnchorPane>

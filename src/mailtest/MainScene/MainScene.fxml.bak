@@ -162,7 +162,7 @@
                     <MenuItem mnemonicParsing="false" text="Move to folder" />
                     <MenuItem mnemonicParsing="false" onAction="#archiveMessage" text="Archive" />
                     <MenuItem mnemonicParsing="false" onAction="#deleteMessage" text="Delete" />
-                    <MenuItem mnemonicParsing="false" onAction="#deleteMessage" text="Clear Message Cache" />
+                    <MenuItem mnemonicParsing="false" text="Clear Message Cache" />
                   </items>
                 </Menu>
                 <Menu mnemonicParsing="false" text="Messages">
