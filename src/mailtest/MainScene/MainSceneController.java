@@ -46,12 +46,17 @@ import javafx.scene.web.WebView;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javax.mail.Address;
 import javax.mail.Flags;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
+import javax.mail.Multipart;
 import javax.mail.Store;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
 import javax.swing.JOptionPane;
+import mailtest.AboutScene.AboutSceneController;
 import mailtest.MailTest;
 import mailtest.SendScene.SendSceneController;
 import mailtest.SettingsScene.SettingsController;
@@ -93,6 +98,33 @@ public class MainSceneController implements Initializable {
     private ProgressIndicator indicator;
     public static List<MessageDTO> messages = new ArrayList<>();
     public static Thread t;
+    private static Message replyMessage;
+    private static MessageDTO replyDto;
+    private static boolean isReplyMode = false;
+
+    public static boolean isIsReplyMode() {
+        return isReplyMode;
+    }
+
+    public static void setIsReplyMode(boolean isReplyMode) {
+        MainSceneController.isReplyMode = isReplyMode;
+    }
+
+    public static Message getReplyMessage() {
+        return replyMessage;
+    }
+
+    public static MessageDTO getReplyDto() {
+        return replyDto;
+    }
+
+    public static void setReplyMessage(Message replyMessage) {
+        MainSceneController.replyMessage = replyMessage;
+    }
+
+    public static void setReplyDto(MessageDTO replyDto) {
+        MainSceneController.replyDto = replyDto;
+    }
 
     /**
      * Initializes the controller class.
@@ -170,9 +202,7 @@ public class MainSceneController implements Initializable {
     public void saveSelectedAttachment(ActionEvent e) {
         FileChooser fc = new FileChooser();
         String selected = fileList.getSelectionModel().getSelectedItem();
-        System.out.println(selected.lastIndexOf("."));
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter(selected.substring(selected.lastIndexOf(".")) + " file", selected.substring(selected.lastIndexOf("."))));
-//        fc.setInitialDirectory(new File(FileSystems.getDefault().getRootDirectories().iterator().next().toString() + selected.substring(selected.lastIndexOf("."))));
         File file = fc.showSaveDialog(null);
         try {
             file = new File(file.getCanonicalPath() + selected.substring(selected.lastIndexOf(".")));
@@ -180,8 +210,6 @@ public class MainSceneController implements Initializable {
             Logger.getLogger(MainSceneController.class.getName()).log(Level.SEVERE, null, ex);
         }
         file.renameTo(new File(file.getAbsolutePath() + selected.substring(selected.lastIndexOf(".") - 1)));
-        System.out.println(file.getName());
-//        file.
         try {
             InputStream[] attachmentStreams;
             try (FileOutputStream fos = new FileOutputStream(file)) {
@@ -277,7 +305,7 @@ public class MainSceneController implements Initializable {
     public void openFolderAction(ActionEvent e) {
         openFolder();
     }
-    
+
     public void removeFolderAction(ActionEvent e) {
         Folder folder = null;
         if (tree.getSelectionModel().getSelectedItem().getParent().equals(tree.getRoot())) {
@@ -311,8 +339,8 @@ public class MainSceneController implements Initializable {
             }
         }
     }
-    
-    public void addFolderAction(ActionEvent e){
+
+    public void addFolderAction(ActionEvent e) {
         Store store = MailTest.getStore();
         String result = JOptionPane.showInputDialog("Enter new folder name");
         try {
@@ -322,7 +350,7 @@ public class MainSceneController implements Initializable {
         } catch (MessagingException ex) {
             Logger.getLogger(MainSceneController.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
     }
 
     public void showSettingsScene(ActionEvent e) {
@@ -339,8 +367,8 @@ public class MainSceneController implements Initializable {
         }
 
     }
-    
-    public void showSendScene(ActionEvent e){
+
+    public void showSendScene(ActionEvent e) {
         try {
             Parent root = FXMLLoader.load(SendSceneController.class.getResource("SendScene.fxml"));
             Stage stage = new Stage();
@@ -353,9 +381,8 @@ public class MainSceneController implements Initializable {
             Logger.getLogger(MainSceneController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-    
-    public void exportAction(ActionEvent e){
+
+    public void exportAction(ActionEvent e) {
         FileChooser fc = new FileChooser();
         fc.setTitle("Export settings.");
         fc.getExtensionFilters().add(new FileChooser.ExtensionFilter("settings file", ".blurp"));
@@ -376,8 +403,8 @@ public class MainSceneController implements Initializable {
             }
         }
     }
-    
-    public void importAction(ActionEvent e){
+
+    public void importAction(ActionEvent e) {
         FileChooser fc = new FileChooser();
         fc.setTitle("Import settings file");
         File file = fc.showOpenDialog(null);
@@ -396,13 +423,13 @@ public class MainSceneController implements Initializable {
             } catch (IOException | ClassNotFoundException ex) {
                 Logger.getLogger(MainSceneController.class.getName()).log(Level.SEVERE, null, ex);
             }
-            JOptionPane.showMessageDialog(null, "Settings have been imported. Please restart.");
+            JOptionPane.showMessageDialog(null, "Settings have been imported. Please start program again.");
             t.interrupt();
             Platform.exit();
         }
     }
-    
-    public void onTreeSelect(MouseEvent e){
+
+    public void onTreeSelect(MouseEvent e) {
         if (e.getClickCount() == 2) {
             openFolder();
         }
@@ -421,19 +448,18 @@ public class MainSceneController implements Initializable {
                 if (tree.getSelectionModel().getSelectedItem().getParent().equals(tree.getRoot())) {
                     folder = MailTest.getStore().getFolder(tree.getSelectionModel().getSelectedItem().getValue());
                 } else {
-//                    folder = MailTest.getStore().getDefaultFolder().getName();
                     folder = MailTest.getStore().getFolder(tree.getSelectionModel().getSelectedItem().getParent().getValue() + "/" + tree.getSelectionModel().getSelectedItem().getValue());
                 }
 
-                Thread t = new Thread(new OpenFolderRun(folder, table, indicator, statusLabel));
+                t = new Thread(new OpenFolderRun(folder, table, indicator, statusLabel));
                 t.start();
             } catch (MessagingException ex) {
                 Logger.getLogger(MainSceneController.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
-    
-    public void archiveMessage(ActionEvent e){
+
+    public void archiveMessage(ActionEvent e) {
         MessageDTO dto = (MessageDTO) table.getSelectionModel().getSelectedItem();
         try {
             Message m = MailTest.getInbox().getMessage(dto.getId());
@@ -453,13 +479,13 @@ public class MainSceneController implements Initializable {
         messages.remove(dto);
         try {
             List<MessageDTO> filelist = new ArrayList<>();
-            try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(new File("test.test")))) {
+            try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(new File("cache.blurp")))) {
                 filelist = (List<MessageDTO>) in.readObject();
                 filelist.remove(dto);
             } catch (ClassNotFoundException ex) {
                 Logger.getLogger(MainSceneController.class.getName()).log(Level.SEVERE, null, ex);
             }
-            try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(new File("test.test")))) {
+            try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(new File("cache.blurp")))) {
                 out.writeObject(filelist);
                 out.flush();
             }
@@ -469,7 +495,7 @@ public class MainSceneController implements Initializable {
             Logger.getLogger(MainSceneController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     public void deleteMessage(ActionEvent e) {
         if (table.getSelectionModel().getSelectedItem() != null) {
             int result = JOptionPane.showConfirmDialog(null, "Are you sure you want to delete this message?", "Delete?", JOptionPane.YES_NO_OPTION);
@@ -479,37 +505,98 @@ public class MainSceneController implements Initializable {
                     Message m = MailTest.getInbox().getMessage(dto.getId());
                     Message[] msgs = new Message[1];
                     msgs[0] = m;
-//                    Folder folder = MailTest.getStore().getFolder("[Gmail]/Bin");
-//                    if (!folder.isOpen()) {
-//                        folder.open(Folder.READ_WRITE);
-//                    }
-//                    MailTest.getInbox().copyMessages(msgs, folder);
                     m.setFlag(Flags.Flag.DELETED, true);
                     m.getFolder().expunge();
                     table.getItems().remove(table.getSelectionModel().getSelectedItem());
-//                    if (m.getFolder().equals(MailTest.getInbox())) {
-                        messages.remove(dto);
-                        try {
-                            List<MessageDTO> filelist;
-                            try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(new File("test.test")))) {
-                                filelist = (List<MessageDTO>) in.readObject();
-                                filelist.remove(dto);
-                            }
-                            try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(new File("test.test")))) {
-                                out.writeObject(filelist);
-                                out.flush();
-                            }
-                        } catch (FileNotFoundException ex) {
-                            Logger.getLogger(MainSceneController.class.getName()).log(Level.SEVERE, null, ex);
-                        } catch (                IOException | ClassNotFoundException ex) {
-                            Logger.getLogger(MainSceneController.class.getName()).log(Level.SEVERE, null, ex);
+                    messages.remove(dto);
+                    try {
+                        List<MessageDTO> filelist;
+                        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(new File("cache.blurp")))) {
+                            filelist = (List<MessageDTO>) in.readObject();
+                            filelist.remove(dto);
                         }
-//                    }
+                        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(new File("cache.blurp")))) {
+                            out.writeObject(filelist);
+                            out.flush();
+                        }
+                    } catch (FileNotFoundException ex) {
+                        Logger.getLogger(MainSceneController.class.getName()).log(Level.SEVERE, null, ex);
+                    } catch (IOException | ClassNotFoundException ex) {
+                        Logger.getLogger(MainSceneController.class.getName()).log(Level.SEVERE, null, ex);
+                    }
                 } catch (MessagingException ex) {
                     Logger.getLogger(MainSceneController.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         }
     }
+
+    public void forwardAction(ActionEvent e) {
+        try {
+            MessageDTO dto = (MessageDTO) table.getSelectionModel().getSelectedItem();
+            Message message = MailTest.getInbox().getMessage(dto.getId());
+            Message fwd = message.reply(true);
+            fwd.setSubject("Fwd: " + message.getSubject());
+            String recipient = JOptionPane.showInputDialog("Enter recipient");
+            InternetAddress to = new InternetAddress(recipient);
+            fwd.setRecipient(Message.RecipientType.TO, to);
+            fwd.setFrom(new InternetAddress(SettingsDTO.readDtoFromFile().getUsername()));
+            fwd.setContent((Multipart) message.getContent());
+            Transport tr = MailTest.getSession().getTransport(SettingsDTO.readDtoFromFile().getConnectionProperties().getProperty("mail.transport.protocol"));
+            Address[] adrss = new Address[1];
+            adrss[0] = to;
+            tr.connect(SettingsDTO.readDtoFromFile().getUsername(), SettingsDTO.readDtoFromFile().getPassword());
+            tr.sendMessage(fwd, adrss);
+            tr.close();
+        } catch (MessagingException ex) {
+            JOptionPane.showMessageDialog(null, "E-mail address is not valid", "Error!", JOptionPane.ERROR_MESSAGE);
+            Logger.getLogger(MainSceneController.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(MainSceneController.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(MainSceneController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public void clearCacheAction(ActionEvent e) {
+        File cache = new File("cache.blurp");
+        cache.delete();
+        JOptionPane.showMessageDialog(null, "Cache cleared. The new settings will be in effect after restart.");
+    }
+
+    public void replyAction(ActionEvent e) {
+        replyDto = (MessageDTO) table.getSelectionModel().getSelectedItem();
+        if (replyDto != null) {
+            try {
+                replyMessage = MailTest.getInbox().getMessage(replyDto.getId()).reply(true);
+                isReplyMode = true;
+                Parent root = FXMLLoader.load(SendSceneController.class.getResource("SendScene.fxml"));
+                Stage stage = new Stage();
+                Scene scene = new Scene(root);
+                stage.getIcons().add(new Image(MailTest.class.getResourceAsStream("icon.png")));
+                stage.setTitle("Reply to ...");
+                stage.setScene(scene);
+                stage.show();
+            } catch (MessagingException ex) {
+                Logger.getLogger(MainSceneController.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (IOException ex) {
+                Logger.getLogger(MainSceneController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+    }
     
+    public void showAboutScene(ActionEvent e) {
+        try {
+            Parent root = FXMLLoader.load(AboutSceneController.class.getResource("AboutScene.fxml"));
+            Stage stage = new Stage();
+            Scene scene = new Scene(root);
+            stage.getIcons().add(new Image(MailTest.class.getResourceAsStream("icon.png")));
+            stage.setTitle("About");
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException ex) {
+            Logger.getLogger(MainSceneController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
 }

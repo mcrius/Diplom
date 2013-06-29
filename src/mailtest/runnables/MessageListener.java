@@ -63,8 +63,8 @@ public class MessageListener implements Runnable{
                             pi.setVisible(true);
                         }
                     });
-                    Message[] messages = folder.getMessages(lastCount, folder.getMessageCount());
-                    try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(new File("test.test")))) {
+                    Message[] messages = folder.getMessages(folder.getMessageCount() - (newMessageCount - lastCount), folder.getMessageCount());
+                    try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(new File("cache.blurp")))) {
                         old = (List<MessageDTO>) in.readObject();
                     }
                     for (int i = 0; i < messages.length; i++) {
@@ -78,7 +78,7 @@ public class MessageListener implements Runnable{
                         }
                     });
                     old.addAll(newM);
-                    try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(new File("test.test")))) {
+                    try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(new File("cache.blurp")))) {
                         out.writeObject(old);
                         out.flush();
                     }
@@ -94,7 +94,7 @@ public class MessageListener implements Runnable{
                     });
                     lastCount = newMessageCount;
                 }
-                Thread.sleep(10 * 1000); //1 min
+                Thread.sleep(10 * 1000);
             }
         } catch (MessagingException | ClassNotFoundException | InterruptedException | IOException ex) {
             Logger.getLogger(MessageListener.class.getName()).log(Level.SEVERE, null, ex);

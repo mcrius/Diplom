@@ -40,6 +40,7 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.swing.JOptionPane;
 import mailtest.MailTest;
+import mailtest.MainScene.MainSceneController;
 import mailtest.dto.SettingsDTO;
 
 /**
@@ -61,13 +62,27 @@ public class SendSceneController implements Initializable {
     private TextField subjectField;
     private Address[] addressList;
     private List<File> files = new ArrayList<>();
+    private boolean isReplyMode;
+
+    public boolean isIsReplyMode() {
+        return isReplyMode;
+    }
+
+    public void setIsReplyMode(boolean isReplyMode) {
+        this.isReplyMode = isReplyMode;
+    }
 
     /**
      * Initializes the controller class.
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // TODO
+        isReplyMode = MainSceneController.isIsReplyMode();
+        if (isReplyMode) {
+            subjectField.setText("Re: " + MainSceneController.getReplyDto().getSubject());
+            toField.setText(MainSceneController.getReplyDto().getFrom());
+            editor.setHtmlText("<p> ------ Original Message ------</p></br>" + MainSceneController.getReplyDto().getBody());
+        }
     }
 
     private boolean isEmailAddress(String address) {
@@ -81,10 +96,17 @@ public class SendSceneController implements Initializable {
     }
 
     public void sendAction(ActionEvent e) {
+        MimeMessage message = null;
+
+        if (isReplyMode) {
+            message = (MimeMessage) MainSceneController.getReplyMessage();
+        }
         try {
             Session session = MailTest.getSession();
             Transport transport = session.getTransport(SettingsDTO.readDtoFromFile().getConnectionProperties().getProperty("mail.transport.protocol"));
-            MimeMessage message = new MimeMessage(session);
+            if (!isReplyMode) {
+                message = new MimeMessage(session);
+            }
             String to = toField.getText();
             String subject = subjectField.getText().trim();
             if (!to.trim().isEmpty()) {
@@ -96,7 +118,7 @@ public class SendSceneController implements Initializable {
                             addressList[i] = new InternetAddress(split[i]);
                         }
                     }
-                }else{
+                } else {
                     addressList = new Address[1];
                     addressList[0] = new InternetAddress(to);
                 }
@@ -135,6 +157,9 @@ public class SendSceneController implements Initializable {
         } catch (MessagingException ex) {
             Logger.getLogger(SendSceneController.class.getName()).log(Level.SEVERE, null, ex);
         }
+        MainSceneController.setIsReplyMode(false);
+        MainSceneController.setReplyDto(null);
+        MainSceneController.setReplyMessage(null);
         closeWindow();
     }
 
@@ -144,10 +169,16 @@ public class SendSceneController implements Initializable {
     }
 
     public void saveAction(ActionEvent e) {
+        MimeMessage message = null;
+        if (isReplyMode) {
+            message = (MimeMessage) MainSceneController.getReplyMessage();
+        }
         try {
             Session session = MailTest.getSession();
             Transport transport = session.getTransport(SettingsDTO.readDtoFromFile().getConnectionProperties().getProperty("mail.transport.protocol"));
-            MimeMessage message = new MimeMessage(session);
+            if (!isReplyMode) {
+                message = new MimeMessage(session);
+            }
             String to = toField.getText();
             String subject = subjectField.getText().trim();
             if (!to.trim().isEmpty()) {
@@ -159,7 +190,7 @@ public class SendSceneController implements Initializable {
                             addressList[i] = new InternetAddress(split[i]);
                         }
                     }
-                }else{
+                } else {
                     addressList = new Address[1];
                     addressList[0] = new InternetAddress(to);
                 }
@@ -185,7 +216,7 @@ public class SendSceneController implements Initializable {
                 Folder draft = null;
                 if (SettingsDTO.readDtoFromFile().getUsername().contains("gmail.com")) {
                     draft = MailTest.getInbox().getStore().getFolder("[Gmail]/Drafts");
-                }else{
+                } else {
                     draft = MailTest.getInbox().getStore().getFolder("Drafts");
                 }
                 message.setFlag(Flags.Flag.DRAFT, true);
@@ -206,10 +237,13 @@ public class SendSceneController implements Initializable {
         } catch (MessagingException ex) {
             Logger.getLogger(SendSceneController.class.getName()).log(Level.SEVERE, null, ex);
         }
+        MainSceneController.setIsReplyMode(false);
+        MainSceneController.setReplyDto(null);
+        MainSceneController.setReplyMessage(null);
         closeWindow();
     }
-    
-    private void closeWindow(){
+
+    private void closeWindow() {
         Stage thisStage = (Stage) sendButton.getScene().getWindow();
         thisStage.close();
     }

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.net.*?>
+<?import java.util.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<AnchorPane id="AnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="200.0" prefWidth="600.0" xmlns:fx="http://javafx.com/fxml" fx:controller="mailtest.AboutScene.AboutSceneController">
+  <children>
+    <Label layoutX="14.0" layoutY="14.0" style="&#10;" text="This program was created as a diplom project by Vasil Georgiev.">
+      <font>
+        <Font size="16.0" fx:id="x1" />
+      </font>
+    </Label>
+    <Label font="$x1" layoutX="14.0" layoutY="43.0" style="&#10;" text="You can download the full source code at:" />
+    <Hyperlink layoutX="14.0" layoutY="71.0" text="git://github.com/mcrius/Diplom.git">
+      <font>
+        <Font size="14.0" fx:id="x2" />
+      </font>
+    </Hyperlink>
+    <Label font="$x1" layoutX="11.0" layoutY="145.0" style="&#10;" text="Please DO NOT abuse." />
+    <Button fx:id="close" font="$x2" layoutX="530.0" layoutY="165.0" mnemonicParsing="false" onAction="#close" text="Close" />
+  </children>
+</AnchorPane>

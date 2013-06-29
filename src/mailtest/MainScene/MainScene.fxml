@@ -63,11 +63,10 @@
                           <contextMenu>
                             <ContextMenu>
                               <items>
-                                <MenuItem mnemonicParsing="false" text="Reply" />
-                                <MenuItem mnemonicParsing="false" text="Forward" />
-                                <MenuItem mnemonicParsing="false" onAction="#deleteMessage" text="Delete" />
-                                <MenuItem mnemonicParsing="false" text="Move to folder" />
+                                <MenuItem mnemonicParsing="false" onAction="#replyAction" text="Reply" />
+                                <MenuItem mnemonicParsing="false" onAction="#forwardAction" text="Forward" />
                                 <MenuItem mnemonicParsing="false" onAction="#archiveMessage" text="Archive" />
+                                <MenuItem mnemonicParsing="false" onAction="#deleteMessage" text="Delete" />
                               </items>
                             </ContextMenu>
                           </contextMenu>
@@ -154,29 +153,22 @@
                     <MenuItem mnemonicParsing="false" onAction="#importAction" text="Import account" />
                     <MenuItem mnemonicParsing="false" onAction="#exportAction" text="Export account" />
                     <SeparatorMenuItem mnemonicParsing="false" />
+                    <MenuItem mnemonicParsing="false" onAction="#clearCacheAction" text="Clear Message Cache" />
                     <MenuItem mnemonicParsing="false" text="Close" />
-                  </items>
-                </Menu>
-                <Menu mnemonicParsing="false" text="Edit">
-                  <items>
-                    <MenuItem mnemonicParsing="false" text="Move to folder" />
-                    <MenuItem mnemonicParsing="false" onAction="#archiveMessage" text="Archive" />
-                    <MenuItem mnemonicParsing="false" onAction="#deleteMessage" text="Delete" />
-                    <MenuItem mnemonicParsing="false" text="Clear Message Cache" />
                   </items>
                 </Menu>
                 <Menu mnemonicParsing="false" text="Messages">
                   <items>
                     <MenuItem mnemonicParsing="false" onAction="#showSendScene" text="Write New" />
-                    <MenuItem mnemonicParsing="false" text="Reply" />
-                    <MenuItem mnemonicParsing="false" text="Forward" />
-                    <SeparatorMenuItem mnemonicParsing="false" />
-                    <MenuItem mnemonicParsing="false" text="Manage templates" />
+                    <MenuItem mnemonicParsing="false" onAction="#replyAction" text="Reply" />
+                    <MenuItem mnemonicParsing="false" onAction="#forwardAction" text="Forward" />
+                    <MenuItem mnemonicParsing="false" onAction="#archiveMessage" text="Archive" />
+                    <MenuItem mnemonicParsing="false" onAction="#deleteMessage" text="Delete" />
                   </items>
                 </Menu>
                 <Menu mnemonicParsing="false" text="Help">
                   <items>
-                    <MenuItem mnemonicParsing="false" text="About" />
+                    <MenuItem mnemonicParsing="false" onAction="#showAboutScene" text="About" />
                   </items>
                 </Menu>
               </menus>

@@ -107,7 +107,7 @@ public class MailTest extends Application {
             }
         
         try {
-            File messageFile = new File("test.test");
+            File messageFile = new File("cache.blurp");
             if (!messageFile.exists()) {
                 try {
                     created = messageFile.createNewFile();
@@ -142,13 +142,13 @@ public class MailTest extends Application {
                     fp.add(FetchProfile.Item.ENVELOPE);
                     inbox.fetch(messages, fp);
                 } else{
-                    if (old.get(old.size() -1 ).getId() > inbox.getMessageCount()) {
-                        messageFile.delete();
-                        messageFile = new File("test.test");
-                        messageFile.createNewFile();
-                        init();
-                        return;
-                    }else{
+//                    if (old.get(old.size() -1 ).getId() > inbox.getMessageCount()) {
+//                        messageFile.delete();
+//                        messageFile = new File("test.test");
+//                        messageFile.createNewFile();
+//                        init();
+//                        return;
+//                    }else{
                     if (old != null && (old.get(old.size() -1).getId() <= inbox.getMessages()[inbox.getMessageCount() -1].getMessageNumber())) {
                         notifyPreloader(new Preloader.ProgressNotification(0d));
                         int lastSavedId = old.get(old.size() -1 ).getId();
@@ -165,14 +165,20 @@ public class MailTest extends Application {
                         inbox.fetch(messages, fp);
                     }else{
                         notifyPreloader(new Preloader.ProgressNotification(0d));
-                        notifyPreloader(new Preloader.ErrorNotification("Downloading the last 100 messages.", "", null));
+                        notifyPreloader(new Preloader.ErrorNotification("Downloading recent messages.", "", null));
                         step = 0.01d;
-                        messages = inbox.getMessages(inbox.getMessageCount() - 100, inbox.getMessageCount());
+                        int count = inbox.getMessageCount() - 100;
+                        if (count < 0) {
+                            messages = inbox.getMessages();
+                            step = 1 / inbox.getMessageCount();
+                        }else{
+                            messages = inbox.getMessages(inbox.getMessageCount() - 100, inbox.getMessageCount());
+                        }
                         FetchProfile fp = new FetchProfile();
                         fp.add(FetchProfile.Item.ENVELOPE);
                         inbox.fetch(messages, fp);
                     }
-                    }
+//                    }
             }
                 ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(messageFile));
                 if (MainSceneController.getMessages() != null && messages != null) {
@@ -194,7 +200,7 @@ public class MailTest extends Application {
         } catch (IOException | ClassNotFoundException | MessagingException ex) {
             Logger.getLogger(MailTest.class.getName()).log(Level.SEVERE, null, ex);
             if (ex instanceof EOFException) {
-                File file = new File("test.test");
+                File file = new File("cache.blurp");
                 file.delete();
             }
         } finally {
