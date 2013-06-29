@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package mailer.runnables;
+package mailtest.runnables;
 
 import com.sun.javafx.collections.ObservableListWrapper;
 import java.util.ArrayList;
@@ -16,8 +16,8 @@ import javafx.scene.control.TableView;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
-import mailer.MainScene.MainSceneController;
-import mailer.dto.MessageDTO;
+import mailtest.MainScene.MainSceneController;
+import mailtest.dto.MessageDTO;
 
 /**
  *

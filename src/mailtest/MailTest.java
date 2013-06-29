@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package mailer;
+package mailtest;
 
 import java.io.EOFException;
 import java.io.File;
@@ -32,9 +32,9 @@ import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Store;
 import javax.swing.JOptionPane;
-import mailer.dto.MessageDTO;
-import mailer.MainScene.MainSceneController;
-import mailer.dto.SettingsDTO;
+import mailtest.dto.MessageDTO;
+import mailtest.MainScene.MainSceneController;
+import mailtest.dto.SettingsDTO;
 
 /**
  *
@@ -142,6 +142,13 @@ public class MailTest extends Application {
                     fp.add(FetchProfile.Item.ENVELOPE);
                     inbox.fetch(messages, fp);
                 } else{
+//                    if (old.get(old.size() -1 ).getId() > inbox.getMessageCount()) {
+//                        messageFile.delete();
+//                        messageFile = new File("test.test");
+//                        messageFile.createNewFile();
+//                        init();
+//                        return;
+//                    }else{
                     if (old != null && (old.get(old.size() -1).getId() <= inbox.getMessages()[inbox.getMessageCount() -1].getMessageNumber())) {
                         notifyPreloader(new Preloader.ProgressNotification(0d));
                         int lastSavedId = old.get(old.size() -1 ).getId();
@@ -218,7 +225,7 @@ public class MailTest extends Application {
         Scene scene = new Scene(root);
 
         stage.setScene(scene);
-        stage.setTitle("Mailer");
+        stage.setTitle("MailChecker");
         stage.getIcons().add(new Image(getClass().getResourceAsStream("icon.png")));
         stage.centerOnScreen();
         stage.show();

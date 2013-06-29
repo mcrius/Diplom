@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package mailer.AboutScene;
+package mailtest.AboutScene;
 
 import java.net.URL;
 import java.util.ResourceBundle;

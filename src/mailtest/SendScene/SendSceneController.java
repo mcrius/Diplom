@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package mailer.SendScene;
+package mailtest.SendScene;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,9 +39,9 @@ import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.swing.JOptionPane;
-import mailer.MailTest;
-import mailer.MainScene.MainSceneController;
-import mailer.dto.SettingsDTO;
+import mailtest.MailTest;
+import mailtest.MainScene.MainSceneController;
+import mailtest.dto.SettingsDTO;
 
 /**
  * FXML Controller class

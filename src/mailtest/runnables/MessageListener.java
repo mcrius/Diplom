@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package mailer.runnables;
+package mailtest.runnables;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -21,7 +21,7 @@ import javafx.scene.control.TableView;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
-import mailer.dto.MessageDTO;
+import mailtest.dto.MessageDTO;
 
 /**
  *

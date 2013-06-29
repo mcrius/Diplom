@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package mailer.dto;
+package mailtest.dto;
 
 import java.io.Serializable;
 
