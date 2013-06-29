@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package mailtest.dto;
+package mailer.dto;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,7 +19,7 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
-import mailtest.MailTest;
+import mailer.MailTest;
 
 /**
  *
@@ -171,7 +171,6 @@ public class MessageDTO implements Serializable{
             }
 
             if (p.isMimeType("multipart/alternative")) {
-                // prefer html text over plain text
                 Multipart mp = (Multipart) p.getContent();
                 String text = null;
                 for (int i = 0; i < mp.getCount(); i++) {

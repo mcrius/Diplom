@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package mailtest.MainScene;
+package mailer.MainScene;
 
 import com.sun.javafx.collections.ObservableListWrapper;
 import java.io.File;
@@ -56,14 +56,14 @@ import javax.mail.Store;
 import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.swing.JOptionPane;
-import mailtest.AboutScene.AboutSceneController;
-import mailtest.MailTest;
-import mailtest.SendScene.SendSceneController;
-import mailtest.SettingsScene.SettingsController;
-import mailtest.dto.MessageDTO;
-import mailtest.dto.SettingsDTO;
-import mailtest.runnables.MessageListener;
-import mailtest.runnables.OpenFolderRun;
+import mailer.AboutScene.AboutSceneController;
+import mailer.MailTest;
+import mailer.SendScene.SendSceneController;
+import mailer.SettingsScene.SettingsController;
+import mailer.dto.MessageDTO;
+import mailer.dto.SettingsDTO;
+import mailer.runnables.MessageListener;
+import mailer.runnables.OpenFolderRun;
 
 /**
  * FXML Controller class

@@ -2,7 +2,7 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package mailtest.SettingsScene;
+package mailer.SettingsScene;
 
 import com.sun.javafx.collections.ObservableListWrapper;
 import java.io.IOException;
@@ -24,8 +24,8 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import javax.swing.JOptionPane;
-import mailtest.MainScene.MainSceneController;
-import mailtest.dto.SettingsDTO;
+import mailer.MainScene.MainSceneController;
+import mailer.dto.SettingsDTO;
 
 /**
  *
