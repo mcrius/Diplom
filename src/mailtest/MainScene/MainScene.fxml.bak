@@ -157,6 +157,14 @@
                     <MenuItem mnemonicParsing="false" text="Close" />
                   </items>
                 </Menu>
+                <Menu mnemonicParsing="false" text="Edit">
+                  <items>
+                    <MenuItem mnemonicParsing="false" text="Move to folder" />
+                    <MenuItem mnemonicParsing="false" onAction="#archiveMessage" text="Archive" />
+                    <MenuItem mnemonicParsing="false" onAction="#deleteMessage" text="Delete" />
+                    <MenuItem mnemonicParsing="false" text="Clear Message Cache" />
+                  </items>
+                </Menu>
                 <Menu mnemonicParsing="false" text="Messages">
                   <items>
                     <MenuItem mnemonicParsing="false" onAction="#showSendScene" text="Write New" />
