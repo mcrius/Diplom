@@ -7,8 +7,6 @@ package mailtest.dto;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -19,13 +17,15 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
+import javax.mail.internet.MimeUtility;
 import mailtest.MailTest;
 
 /**
  *
  * @author bzzzt
  */
-public class MessageDTO implements Serializable{
+public class MessageDTO implements Serializable {
+
     private int id;
     private String from;
     private String recipient;
@@ -37,7 +37,6 @@ public class MessageDTO implements Serializable{
     private Date sentDate;
     private boolean read;
     private boolean textIsHtml = false;
-
 
     public MessageDTO(int id, String from, String recipient, String cc, String body, String[] attachmentNames, Date receivedDate, Date sentDate, boolean read) {
         this.id = id;
@@ -51,9 +50,7 @@ public class MessageDTO implements Serializable{
         this.read = read;
     }
 
-    
-    
-    public MessageDTO(Message m){
+    public MessageDTO(Message m) {
 //        DateFormat df = new SimpleDateFormat("HH:mm dd-MM-yyyy");
         try {
             this.id = m.getMessageNumber();
@@ -65,7 +62,7 @@ public class MessageDTO implements Serializable{
 //                    .substring(1, Arrays.toString(m.getRecipients(Message.RecipientType.CC)).length()-1 );
             this.receivedDate = m.getReceivedDate();
             this.sentDate = m.getSentDate();
-            this.subject = m.getSubject();
+            this.subject = MimeUtility.decodeText(m.getSubject());
             this.body = getText(m);
             this.read = m.isExpunged();
             this.attachmentNames = createAttachmentNames(m);
@@ -156,13 +153,12 @@ public class MessageDTO implements Serializable{
     public void setRead(boolean read) {
         this.read = read;
     }
-    
-        /**
+
+    /**
      * Return the primary text content of the message.
      */
     private String getText(Part p) throws MessagingException, IOException {
         if (p != null) {
-
 
             if (p.isMimeType("text/*")) {
                 String s = (String) p.getContent();
@@ -201,10 +197,10 @@ public class MessageDTO implements Serializable{
                 }
             }
         }
-            return null;
+        return null;
     }
-    
-    private String[] createAttachmentNames(Part m){
+
+    private String[] createAttachmentNames(Part m) {
         ArrayList<String> files = new ArrayList<>();
         try {
             if (m.isMimeType("multipart/*")) {
@@ -215,17 +211,17 @@ public class MessageDTO implements Serializable{
                         if (bp.isMimeType("multipart/*")) {
                             Multipart inner = (Multipart) bp.getContent();
                             for (int j = 0; j < inner.getCount(); j++) {
-                                if (inner.getBodyPart(j).getDisposition()!=null && inner.getBodyPart(j).getDisposition().equalsIgnoreCase(Part.ATTACHMENT)) {
+                                if (inner.getBodyPart(j).getDisposition() != null && inner.getBodyPart(j).getDisposition().equalsIgnoreCase(Part.ATTACHMENT)) {
                                     files.add(inner.getBodyPart(j).getFileName());
                                 }
                             }
-                        }else{
-                            if (bp.getDisposition()!=null && bp.getDisposition().equalsIgnoreCase(Part.ATTACHMENT)) {
+                        } else {
+                            if (bp.getDisposition() != null && bp.getDisposition().equalsIgnoreCase(Part.ATTACHMENT)) {
                                 files.add(bp.getFileName());
                             }
                         }
                     }
-                } catch (        MessagingException | IOException ex) {
+                } catch (MessagingException | IOException ex) {
                     Logger.getLogger(MessageDTO.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
@@ -234,7 +230,7 @@ public class MessageDTO implements Serializable{
         }
         return files.toArray(new String[files.size()]);
     }
-    
+
     public InputStream[] getAttachmentStreams(String[] fileNames) {
         ArrayList<InputStream> streams = new ArrayList<>();
         try {
@@ -280,4 +276,5 @@ public class MessageDTO implements Serializable{
         }
         return streams.toArray(new InputStream[streams.size()]);
     }
+
 }

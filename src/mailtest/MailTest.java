@@ -4,13 +4,7 @@
  */
 package mailtest;
 
-import java.io.EOFException;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -29,12 +23,21 @@ import javax.mail.FetchProfile;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
+import javax.mail.NoSuchProviderException;
 import javax.mail.Session;
 import javax.mail.Store;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 import javax.swing.JOptionPane;
-import mailtest.dto.MessageDTO;
 import mailtest.MainScene.MainSceneController;
-import mailtest.dto.SettingsDTO;
+import mailtest.jpa.controllers.AttachmentNameJpaController;
+import mailtest.jpa.controllers.MailMessageJpaController;
+import mailtest.jpa.controllers.SettingController;
+import mailtest.jpa.entities.AttachmentName;
+import mailtest.jpa.entities.MailMessage;
+import mailtest.jpa.entities.Setting;
+import mailtest.jpa.entities.SettingsProperty;
+import mailtest.utils.Utils;
 
 /**
  *
@@ -45,18 +48,17 @@ public class MailTest extends Application {
     private static Message[] messages;
     private double step = 0d;
     private static Session session;
+    private static EntityManagerFactory emf;
 
     public static Session getSession() {
         return session;
     }
-    
-    
 
     public static Message[] getMessages() {
         return messages;
     }
     private static Folder inbox;
-    
+
     private static Store store;
     private static Folder[] folders;
 
@@ -67,9 +69,15 @@ public class MailTest extends Application {
     public static Store getStore() {
         return store;
     }
-    
-    
-    
+
+    public static EntityManagerFactory getEmf() {
+        return emf;
+    }
+
+    public static void setEmf(EntityManagerFactory emf) {
+        MailTest.emf = emf;
+    }
+
     private Folder[] findFolders() {
         try {
             Folder[] list = store.getDefaultFolder().list();
@@ -82,53 +90,43 @@ public class MailTest extends Application {
             return null;
         }
     }
-    
-    
 
     public static Folder getInbox() {
         return inbox;
     }
-    private List<MessageDTO> old;
+
+    private List<MailMessage> old;
 
     @Override
     public void init() {
+        notifyPreloader(new Preloader.ProgressNotification(-1d));
+        emf = Persistence.createEntityManagerFactory("MailerPU");
         double progress = 0d;
         Properties props = null;
         Platform.setImplicitExit(true);
-        boolean created = false;
-        ObjectInputStream objectInputStream = null;
-        if (SettingsDTO.checkFile()) {
-            SettingsDTO dto = null;
+
+        SettingController sg = new SettingController(emf);
+        List<Setting> list = sg.findSettingEntities();
+        if (list != null && !list.isEmpty()) {
+
+        Setting settings = sg.findSettingEntities().get(0);
+            List<SettingsProperty> properties = settings.getProperties();
+            props = Utils.getConnectionProperties(properties);
+
+            MailMessageJpaController mmc = new MailMessageJpaController(emf);
+            old = mmc.findMailMessageEntities();
+            MainSceneController.setMessages(old);
+
+            
+
+            session = Session.getDefaultInstance(props, null);
             try {
-                dto = SettingsDTO.readDtoFromFile();
-                props = dto.getConnectionProperties();
-            } catch (    IOException | ClassNotFoundException ex) {
+                store = session.getStore(props.getProperty("mail.store.protocol"));
+            } catch (NoSuchProviderException ex) {
                 Logger.getLogger(MailTest.class.getName()).log(Level.SEVERE, null, ex);
             }
-        
-        try {
-            File messageFile = new File("cache.blurp");
-            if (!messageFile.exists()) {
-                try {
-                    created = messageFile.createNewFile();
-                } catch (IOException ex) {
-                    Logger.getLogger(MailTest.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-            if (!created) {
-                objectInputStream = new ObjectInputStream(new FileInputStream(messageFile));
-            }
-            if (messageFile.length() > 20) {
-                old = (List<MessageDTO>) objectInputStream.readObject();
-                MainSceneController.setMessages(old);
-                System.out.println("Set messages");
-            }
-            notifyPreloader(new Preloader.ProgressNotification(-1d));
-            
-            session = Session.getDefaultInstance(props, null);
-            store = session.getStore(props.getProperty("mail.store.protocol"));
             try {
-                store.connect(props.getProperty("mail.store.host"), dto.getUsername(), dto.getPassword());
+                store.connect(props.getProperty("mail.store.host"), settings.getUsername(), settings.getPassword());
                 folders = findFolders();
                 inbox = store.getFolder("INBOX");
                 inbox.open(Folder.READ_WRITE);
@@ -141,21 +139,14 @@ public class MailTest extends Application {
                     FetchProfile fp = new FetchProfile();
                     fp.add(FetchProfile.Item.ENVELOPE);
                     inbox.fetch(messages, fp);
-                } else{
-//                    if (old.get(old.size() -1 ).getId() > inbox.getMessageCount()) {
-//                        messageFile.delete();
-//                        messageFile = new File("test.test");
-//                        messageFile.createNewFile();
-//                        init();
-//                        return;
-//                    }else{
-                    if (old != null && (old.get(old.size() -1).getId() <= inbox.getMessages()[inbox.getMessageCount() -1].getMessageNumber())) {
+                } else {
+                    if (old != null && !old.isEmpty() && (old.get(old.size() - 1).getId() <= inbox.getMessages()[inbox.getMessageCount() - 1].getMessageNumber())) {
                         notifyPreloader(new Preloader.ProgressNotification(0d));
-                        int lastSavedId = old.get(old.size() -1 ).getId();
-                        int newestId = inbox.getMessages()[inbox.getMessageCount() -1 ].getMessageNumber();
+                        int lastSavedId = old.get(old.size() - 1).getMessageId();
+                        int newestId = inbox.getMessages()[inbox.getMessageCount() - 1].getMessageNumber();
                         if ((newestId - lastSavedId) != 0) {
                             step = 1 / (newestId - lastSavedId);
-                        }else{
+                        } else {
                             step = -2d;
                         }
                         System.out.println("Step is : " + step);
@@ -163,67 +154,53 @@ public class MailTest extends Application {
                         FetchProfile fp = new FetchProfile();
                         fp.add(FetchProfile.Item.ENVELOPE);
                         inbox.fetch(messages, fp);
-                    }else{
+                    } else {
                         notifyPreloader(new Preloader.ProgressNotification(0d));
                         notifyPreloader(new Preloader.ErrorNotification("Downloading recent messages.", "", null));
-                        step = 0.01d;
-                        int count = inbox.getMessageCount() - 100;
+                        step = 0.03d;
+                        int count = inbox.getMessageCount() - 30;
                         if (count < 0) {
                             messages = inbox.getMessages();
                             step = 1 / inbox.getMessageCount();
-                        }else{
+                        } else {
                             messages = inbox.getMessages(inbox.getMessageCount() - 100, inbox.getMessageCount());
                         }
                         FetchProfile fp = new FetchProfile();
                         fp.add(FetchProfile.Item.ENVELOPE);
                         inbox.fetch(messages, fp);
                     }
-//                    }
-            }
-                ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(messageFile));
+                }
+
                 if (MainSceneController.getMessages() != null && messages != null) {
-                    for (int i = 0; i < messages.length; i++) {
+                    for (Message message : messages) {
                         if (step != -2d) {
-                            MainSceneController.getMessages().add(new MessageDTO(messages[i]));
+                            MailMessage mailMessage = new MailMessage(message);
+                            List<AttachmentName> atts = Utils.createAttachmentNames(message, mailMessage);
+                            mmc.create(mailMessage);
+                            MainSceneController.getMessages().add(mailMessage);
+                            AttachmentNameJpaController ac = new AttachmentNameJpaController(MailTest.getEmf());
+                            for (AttachmentName f : atts) {
+                                ac.create(f);
+                            }
                         }
-                        progress+=step;
+                        progress += step;
                         notifyPreloader(new Preloader.ProgressNotification(progress));
                     }
                 }
-                out.writeObject(MainSceneController.getMessages());
-                out.flush();
-                System.out.println("Messages written");
             } catch (MessagingException e) {
                 Logger.getLogger(MailTest.class.getName()).log(Level.SEVERE, null, e);
                 JOptionPane.showMessageDialog(null, "You currently have no internet connection.\nYou will be able to read only locally saved messages.");
-            }
-        } catch (IOException | ClassNotFoundException | MessagingException ex) {
-            Logger.getLogger(MailTest.class.getName()).log(Level.SEVERE, null, ex);
-            if (ex instanceof EOFException) {
-                File file = new File("cache.blurp");
-                file.delete();
-            }
-        } finally {
-            try {
-                if (objectInputStream != null) {
-                    objectInputStream.close();
-                }
-            } catch (IOException ex) {
-                Logger.getLogger(MailTest.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (Exception e) {
+                Logger.getLogger(MailTest.class.getName()).log(Level.SEVERE, null, e);
             }
         }
-        }else{
-            SettingsDTO.createFile();
-        }
-        
-        //TODO Create folder tree here
     }
 
+    //TODO Create folder tree here
     @Override
     public void start(Stage stage) throws Exception {
         Parent root = FXMLLoader.load(getClass().getResource("MainScene/MainScene.fxml"));
         Scene scene = new Scene(root);
-
         stage.setScene(scene);
         stage.setTitle("MailChecker");
         stage.getIcons().add(new Image(getClass().getResourceAsStream("icon.png")));

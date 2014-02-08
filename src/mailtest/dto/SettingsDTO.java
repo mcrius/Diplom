@@ -28,6 +28,8 @@ public class SettingsDTO implements Serializable {
     private String username;
     private String password;
 
+    
+    //TODO ADD TO CONTROLLER
     public static SettingsDTO readDtoFromFile() throws IOException, ClassNotFoundException {
         if (SettingsDTO.checkFile()) {
             File file = new File("settings.blurp");
@@ -41,11 +43,13 @@ public class SettingsDTO implements Serializable {
         }
     }
 
+    //TODO COUNT SELECT
     public static boolean checkFile() {
         File file = new File("settings.blurp");
         return file.exists();
     }
 
+    //TODO REMOVE
     public static void createFile() {
         File file = new File("settings.blurp");
         if (!file.exists()) {
@@ -58,6 +62,7 @@ public class SettingsDTO implements Serializable {
         }
     }
 
+    //TODO REMOVE
     public static void saveDtoToFile(SettingsDTO dto) throws FileNotFoundException, IOException {
         File file = new File("settings.blurp");
         try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(file))) {
@@ -99,6 +104,7 @@ public class SettingsDTO implements Serializable {
         this.password = password;
     }
 
+    //TODO MODIFY IN CONTROLLER
     public Properties getConnectionProperties() {
         Properties p = System.getProperties();
         for (int i = 0; i < this.properties.size(); i++) {
@@ -107,6 +113,8 @@ public class SettingsDTO implements Serializable {
         return p;
     }
 
+    
+    //JUST COPY AND CHANGE ENTITY
     public List<Property> makeProperties(String incHost, String outHost, String incPort, String outPort, String incSSL, String outSSL, String inProtocol, boolean isGmail) {
         List<Property> props = new ArrayList<>();
         if (isGmail) {

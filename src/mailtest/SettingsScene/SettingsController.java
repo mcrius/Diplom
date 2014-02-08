@@ -5,9 +5,9 @@
 package mailtest.SettingsScene;
 
 import com.sun.javafx.collections.ObservableListWrapper;
-import java.io.IOException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.List;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -24,8 +24,14 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Stage;
 import javax.swing.JOptionPane;
+import mailtest.MailTest;
 import mailtest.MainScene.MainSceneController;
-import mailtest.dto.SettingsDTO;
+import mailtest.jpa.controllers.SettingController;
+import mailtest.jpa.controllers.SettingsPropertyController;
+import mailtest.jpa.controllers.exceptions.NonexistentEntityException;
+import mailtest.jpa.entities.Setting;
+import mailtest.jpa.entities.SettingsProperty;
+import mailtest.utils.Utils;
 
 /**
  *
@@ -118,19 +124,35 @@ public class SettingsController implements Initializable {
     }
 
     public void saveAction(ActionEvent e) {
+        Setting setting = new Setting();
+        SettingController sg = new SettingController(MailTest.getEmf());
+        List<SettingsProperty> props = Utils.makeProperties(incHostname.getText(), outHostname.getText(), incPort.getText(), outPort.getText(),
+                incSSL.getValue(), outSSL.getValue(), choiceBox.getSelectionModel().getSelectedItem(), isGmail());
+        SettingsPropertyController spc = new SettingsPropertyController(MailTest.getEmf());
+        setting.setUsername(userField.getText());
+        setting.setPassword(passField.getText());
         try {
-            SettingsDTO dto = SettingsDTO.readDtoFromFile();
-            dto.setProperties(dto.makeProperties(incHostname.getText(), outHostname.getText(), incPort.getText(), outPort.getText(), incSSL.getValue(), outSSL.getValue(), choiceBox.getSelectionModel().getSelectedItem(), isGmail()));
-            dto.setUsername(userField.getText());
-            dto.setPassword(passField.getText());
-            SettingsDTO.saveDtoToFile(dto);
-            closeWindow();
-        } catch (IOException | ClassNotFoundException ex) {
+            List<Setting> all = sg.findSettingEntities();
+            for (Setting s : all) {
+                sg.destroy(s.getId());
+            }
+            sg.create(setting);
+            for (SettingsProperty p : props) {
+                p.setSetting(setting);
+                spc.create(p);
+            }
+            
+//            sg.edit(setting);
+        } catch (NonexistentEntityException ex) {
+            Logger.getLogger(SettingsController.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception ex) {
             Logger.getLogger(SettingsController.class.getName()).log(Level.SEVERE, null, ex);
         }
         
         JOptionPane.showMessageDialog(null, "Settings were saved but you need to restart the application so they can take effect.");
-        MainSceneController.t.interrupt();
+        if (MainSceneController.t != null) {
+            MainSceneController.t.interrupt();
+        }
         Platform.exit();
     }
     
@@ -144,11 +166,7 @@ public class SettingsController implements Initializable {
     }
     
     private boolean isGmail() {
-        if (userField.getText().contains("gmail.com")) {
-            return true;
-        } else {
-            return false;
-        }
+        return userField.getText().contains("gmail.com");
     }
    
     
