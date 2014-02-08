@@ -202,7 +202,6 @@ public class MessageDTO implements Serializable{
             }
         }
             return null;
-        
     }
     
     private String[] createAttachmentNames(Part m){
@@ -218,7 +217,6 @@ public class MessageDTO implements Serializable{
                             for (int j = 0; j < inner.getCount(); j++) {
                                 if (inner.getBodyPart(j).getDisposition()!=null && inner.getBodyPart(j).getDisposition().equalsIgnoreCase(Part.ATTACHMENT)) {
                                     files.add(inner.getBodyPart(j).getFileName());
-                                    //TODO hashmap to get stream easily with key fileName
                                 }
                             }
                         }else{

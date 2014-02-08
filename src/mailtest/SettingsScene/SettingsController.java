@@ -115,11 +115,6 @@ public class SettingsController implements Initializable {
 
     public void manualClick(ActionEvent e) {
         grid.setVisible(!grid.isVisible());
-//            if (grid.isVisible()) {
-//                grid.setPrefHeight(168d);
-//            }else{
-//                grid.setPrefHeight(0d);
-//            }
     }
 
     public void saveAction(ActionEvent e) {
