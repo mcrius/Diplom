@@ -18,7 +18,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Temporal;
-import mailtest.dto.MessageDTO;
 import mailtest.utils.Utils;
 
 /**
@@ -143,10 +142,14 @@ public class MailMessage implements Serializable {
             this.cc = MimeUtility.decodeText(Arrays.toString(m.getRecipients(Message.RecipientType.CC)).replaceAll("\\[", "").replaceAll("\\]", ""));
             this.receivedDate = m.getReceivedDate();
             this.sentDate = m.getSentDate();
-            this.subject = m.getSubject();
-            this.body = Utils.getText(m);
+            if (m.getSubject() != null) {
+                this.subject = m.getSubject();
+            }else{
+                this.subject = "";
+            }
+            this.body = MimeUtility.decodeText(Utils.getText(m));
         } catch (MessagingException | IOException ex) {
-            Logger.getLogger(MessageDTO.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(MailMessage.class.getName()).log(Level.SEVERE, null, ex);
         }
 
     }

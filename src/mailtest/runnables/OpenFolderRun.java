@@ -17,7 +17,7 @@ import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import mailtest.MainScene.MainSceneController;
-import mailtest.dto.MessageDTO;
+import mailtest.jpa.entities.MailMessage;
 
 /**
  *
@@ -40,7 +40,7 @@ public class OpenFolderRun implements Runnable{
     
     @Override
     public void run() {
-        final List<MessageDTO> list = new ArrayList<>();
+        final List<MailMessage> list = new ArrayList<>();
         Platform.runLater(new Runnable() {
 
             @Override
@@ -57,8 +57,8 @@ public class OpenFolderRun implements Runnable{
             }else{
                 all = folder.getMessages(folder.getMessageCount()-100, folder.getMessageCount());
             }
-            for (int i = 0; i < all.length; i++) {
-                list.add(new MessageDTO(all[i]));
+            for (Message all1 : all) {
+                list.add(new MailMessage(all1));
             }
             Platform.runLater(new Runnable() {
 

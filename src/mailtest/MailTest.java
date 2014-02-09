@@ -4,7 +4,8 @@
  */
 package mailtest;
 
-import java.util.ArrayList;
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
@@ -38,6 +39,12 @@ import mailtest.jpa.entities.MailMessage;
 import mailtest.jpa.entities.Setting;
 import mailtest.jpa.entities.SettingsProperty;
 import mailtest.utils.Utils;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.store.MMapDirectory;
+import org.apache.lucene.util.Version;
 
 /**
  *
@@ -49,6 +56,8 @@ public class MailTest extends Application {
     private double step = 0d;
     private static Session session;
     private static EntityManagerFactory emf;
+    private static Directory index;
+    private static StandardAnalyzer analyzer;
 
     public static Session getSession() {
         return session;
@@ -78,6 +87,12 @@ public class MailTest extends Application {
         MailTest.emf = emf;
     }
 
+    public static Directory getIndex() {
+        return index;
+    }
+    
+    
+
     private Folder[] findFolders() {
         try {
             Folder[] list = store.getDefaultFolder().list();
@@ -98,13 +113,20 @@ public class MailTest extends Application {
     private List<MailMessage> old;
 
     @Override
-    public void init() {
-        notifyPreloader(new Preloader.ProgressNotification(-1d));
+    public void init() throws IOException {
+        File f = new File("lucene.dir");
+        notifyPreloader(new Preloader.ProgressNotification(-10d));
         emf = Persistence.createEntityManagerFactory("MailerPU");
         double progress = 0d;
         Properties props = null;
         Platform.setImplicitExit(true);
-
+        //TODO INIT LUCENE
+        
+        notifyPreloader(new Preloader.ProgressNotification(-9d));
+        analyzer = new StandardAnalyzer(Version.LUCENE_45);
+        index = new MMapDirectory(f);
+        IndexWriter w = new IndexWriter(index, new IndexWriterConfig(Version.LUCENE_45, analyzer));
+        notifyPreloader(new Preloader.ProgressNotification(-8d));
         SettingController sg = new SettingController(emf);
         List<Setting> list = sg.findSettingEntities();
         if (list != null && !list.isEmpty()) {
@@ -157,14 +179,15 @@ public class MailTest extends Application {
                     } else {
                         notifyPreloader(new Preloader.ProgressNotification(0d));
                         notifyPreloader(new Preloader.ErrorNotification("Downloading recent messages.", "", null));
-                        step = 0.03d;
+                        
                         int count = inbox.getMessageCount() - 30;
                         if (count < 0) {
                             messages = inbox.getMessages();
                             step = 1 / inbox.getMessageCount();
                         } else {
-                            messages = inbox.getMessages(inbox.getMessageCount() - 100, inbox.getMessageCount());
+                            messages = inbox.getMessages(inbox.getMessageCount() - 30, inbox.getMessageCount());
                         }
+                        step = 1 / 30;
                         FetchProfile fp = new FetchProfile();
                         fp.add(FetchProfile.Item.ENVELOPE);
                         inbox.fetch(messages, fp);
@@ -177,10 +200,11 @@ public class MailTest extends Application {
                             MailMessage mailMessage = new MailMessage(message);
                             List<AttachmentName> atts = Utils.createAttachmentNames(message, mailMessage);
                             mmc.create(mailMessage);
+                            Utils.addMessageToIndex(w, mailMessage);
                             MainSceneController.getMessages().add(mailMessage);
                             AttachmentNameJpaController ac = new AttachmentNameJpaController(MailTest.getEmf());
-                            for (AttachmentName f : atts) {
-                                ac.create(f);
+                            for (AttachmentName att : atts) {
+                                ac.create(att);
                             }
                         }
                         progress += step;
@@ -190,10 +214,10 @@ public class MailTest extends Application {
             } catch (MessagingException e) {
                 Logger.getLogger(MailTest.class.getName()).log(Level.SEVERE, null, e);
                 JOptionPane.showMessageDialog(null, "You currently have no internet connection.\nYou will be able to read only locally saved messages.");
-            } catch (Exception e) {
-                Logger.getLogger(MailTest.class.getName()).log(Level.SEVERE, null, e);
             }
         }
+        w.commit();
+        w.close();
     }
 
     //TODO Create folder tree here

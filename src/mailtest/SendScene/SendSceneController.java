@@ -41,7 +41,9 @@ import javax.mail.internet.MimeMultipart;
 import javax.swing.JOptionPane;
 import mailtest.MailTest;
 import mailtest.MainScene.MainSceneController;
-import mailtest.dto.SettingsDTO;
+import mailtest.jpa.controllers.SettingController;
+import mailtest.jpa.entities.Setting;
+import mailtest.utils.Utils;
 
 /**
  * FXML Controller class
@@ -81,7 +83,7 @@ public class SendSceneController implements Initializable {
         if (isReplyMode) {
             subjectField.setText("Re: " + MainSceneController.getReplyDto().getSubject());
             toField.setText(MainSceneController.getReplyDto().getFrom());
-            editor.setHtmlText("<p> ------ Original Message ------</p></br>" + MainSceneController.getReplyDto().getBody());
+            editor.setHtmlText("<p> ------ Original Message ------</p></br>".concat(MainSceneController.getReplyDto().getBody()));
         }
     }
 
@@ -97,70 +99,76 @@ public class SendSceneController implements Initializable {
 
     public void sendAction(ActionEvent e) {
         MimeMessage message = null;
-
-        if (isReplyMode) {
-            message = (MimeMessage) MainSceneController.getReplyMessage();
-        }
-        try {
-            Session session = MailTest.getSession();
-            Transport transport = session.getTransport(SettingsDTO.readDtoFromFile().getConnectionProperties().getProperty("mail.transport.protocol"));
-            if (!isReplyMode) {
-                message = new MimeMessage(session);
+        SettingController sc = new SettingController(MailTest.getEmf());
+        int settingCount = sc.getSettingCount();
+        Setting setting = new Setting();
+        if (settingCount == 1) {
+            setting = sc.findSettingEntities().get(0);
+            if (isReplyMode) {
+                message = (MimeMessage) MainSceneController.getReplyMessage();
             }
-            String to = toField.getText();
-            String subject = subjectField.getText().trim();
-            if (!to.trim().isEmpty()) {
-                if (to.contains(",")) {
-                    String[] split = to.split(",");
-                    addressList = new Address[split.length];
-                    for (int i = 0; i < split.length; i++) {
-                        if (isEmailAddress(split[i])) {
-                            addressList[i] = new InternetAddress(split[i]);
+            try {
+                Session session = MailTest.getSession();
+                Transport transport = session.getTransport(Utils.getConnectionProperties(setting.getProperties()).getProperty("mail.transport.protocol"));
+                if (!isReplyMode) {
+                    message = new MimeMessage(session);
+                }
+                String to = toField.getText();
+                String subject = subjectField.getText().trim();
+                if (!to.trim().isEmpty()) {
+                    if (to.contains(",")) {
+                        String[] split = to.split(",");
+                        addressList = new Address[split.length];
+                        for (int i = 0; i < split.length; i++) {
+                            if (isEmailAddress(split[i])) {
+                                addressList[i] = new InternetAddress(split[i]);
+                            }
+                        }
+                    } else {
+                        addressList = new Address[1];
+                        addressList[0] = new InternetAddress(to);
+                    }
+                    for (Address addressList1 : addressList) {
+                        message.addRecipient(Message.RecipientType.TO, addressList1);
+                    }
+                    message.setSubject(subject);
+                    message.setFrom(new InternetAddress(setting.getUsername()));
+                    Multipart content = new MimeMultipart();
+                    BodyPart text = new MimeBodyPart();
+                    text.setContent(editor.getHtmlText(), "text/html");
+                    content.addBodyPart(text);
+                    if (!files.isEmpty()) {
+                        for (File file : files) {
+                            BodyPart part = new MimeBodyPart();
+                            part.setFileName(file.getName());
+                            part.setDisposition(Part.ATTACHMENT);
+                            part.setDataHandler(new DataHandler(new FileDataSource(file)));
+                            content.addBodyPart(part);
                         }
                     }
-                } else {
-                    addressList = new Address[1];
-                    addressList[0] = new InternetAddress(to);
-                }
-                for (int i = 0; i < addressList.length; i++) {
-                    message.addRecipient(Message.RecipientType.TO, addressList[i]);
-                }
-                message.setSubject(subject);
-                message.setFrom(new InternetAddress(SettingsDTO.readDtoFromFile().getUsername()));
-                Multipart content = new MimeMultipart();
-                BodyPart text = new MimeBodyPart();
-                text.setContent(editor.getHtmlText(), "text/html");
-                content.addBodyPart(text);
-                if (!files.isEmpty()) {
-                    for (File file : files) {
-                        BodyPart part = new MimeBodyPart();
-                        part.setFileName(file.getName());
-                        part.setDisposition(Part.ATTACHMENT);
-                        part.setDataHandler(new DataHandler(new FileDataSource(file)));
-                        content.addBodyPart(part);
+                    message.setContent(content);
+                    if (!transport.isConnected()) {
+                        transport.connect(setting.getUsername(), setting.getPassword());
                     }
+                    transport.sendMessage(message, addressList);
+                    transport.close();
+                } else {
+                    JOptionPane.showMessageDialog(null, "Please enter at least one recipient.", "Error!", JOptionPane.ERROR_MESSAGE);
                 }
-                message.setContent(content);
-                if (!transport.isConnected()) {
-                    transport.connect(SettingsDTO.readDtoFromFile().getUsername(), SettingsDTO.readDtoFromFile().getPassword());
-                }
-                transport.sendMessage(message, addressList);
-                transport.close();
-            } else {
-                JOptionPane.showMessageDialog(null, "Please enter at least one recipient.", "Error!", JOptionPane.ERROR_MESSAGE);
-            }
 
-        } catch (IOException | ClassNotFoundException | NoSuchProviderException ex) {
-            Logger.getLogger(SendSceneController.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (AddressException ex) {
-            Logger.getLogger(SendSceneController.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (MessagingException ex) {
-            Logger.getLogger(SendSceneController.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (AddressException ex) {
+                Logger.getLogger(SendSceneController.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (MessagingException ex) {
+                Logger.getLogger(SendSceneController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            MainSceneController.setIsReplyMode(false);
+            MainSceneController.setReplyDto(null);
+            MainSceneController.setReplyMessage(null);
+            closeWindow();
+        } else {
+            JOptionPane.showMessageDialog(null, "Cannot find settings.", "Error!", JOptionPane.ERROR_MESSAGE);
         }
-        MainSceneController.setIsReplyMode(false);
-        MainSceneController.setReplyDto(null);
-        MainSceneController.setReplyMessage(null);
-        closeWindow();
+
     }
 
     public void attachAction(ActionEvent e) {
@@ -169,78 +177,84 @@ public class SendSceneController implements Initializable {
     }
 
     public void saveAction(ActionEvent e) {
-        MimeMessage message = null;
-        if (isReplyMode) {
-            message = (MimeMessage) MainSceneController.getReplyMessage();
-        }
-        try {
-            Session session = MailTest.getSession();
-            Transport transport = session.getTransport(SettingsDTO.readDtoFromFile().getConnectionProperties().getProperty("mail.transport.protocol"));
-            if (!isReplyMode) {
-                message = new MimeMessage(session);
+        SettingController sc = new SettingController(MailTest.getEmf());
+        int settingCount = sc.getSettingCount();
+        Setting setting = new Setting();
+        if (settingCount == 1) {
+            setting = sc.findSettingEntities().get(0);
+            MimeMessage message = null;
+            if (isReplyMode) {
+                message = (MimeMessage) MainSceneController.getReplyMessage();
             }
-            String to = toField.getText();
-            String subject = subjectField.getText().trim();
-            if (!to.trim().isEmpty()) {
-                if (to.contains(",")) {
-                    String[] split = to.split(",");
-                    addressList = new Address[split.length];
-                    for (int i = 0; i < split.length; i++) {
-                        if (isEmailAddress(split[i])) {
-                            addressList[i] = new InternetAddress(split[i]);
+            try {
+                Session session = MailTest.getSession();
+                Transport transport = session.getTransport(Utils.getConnectionProperties(setting.getProperties()).getProperty("mail.transport.protocol"));
+                if (!isReplyMode) {
+                    message = new MimeMessage(session);
+                }
+                String to = toField.getText();
+                String subject = subjectField.getText().trim();
+                if (!to.trim().isEmpty()) {
+                    if (to.contains(",")) {
+                        String[] split = to.split(",");
+                        addressList = new Address[split.length];
+                        for (int i = 0; i < split.length; i++) {
+                            if (isEmailAddress(split[i])) {
+                                addressList[i] = new InternetAddress(split[i]);
+                            }
+                        }
+                    } else {
+                        addressList = new Address[1];
+                        addressList[0] = new InternetAddress(to);
+                    }
+                    for (int i = 0; i < addressList.length; i++) {
+                        message.addRecipient(Message.RecipientType.TO, addressList[i]);
+                    }
+                    message.setSubject(subject);
+                    message.setFrom(new InternetAddress(setting.getUsername()));
+                    Multipart content = new MimeMultipart();
+                    BodyPart text = new MimeBodyPart();
+                    text.setContent(editor.getHtmlText(), "text/html");
+                    content.addBodyPart(text);
+                    if (!files.isEmpty()) {
+                        for (File file : files) {
+                            BodyPart part = new MimeBodyPart();
+                            part.setFileName(file.getName());
+                            part.setDisposition(Part.ATTACHMENT);
+                            part.setDataHandler(new DataHandler(new FileDataSource(file)));
+                            content.addBodyPart(part);
                         }
                     }
-                } else {
-                    addressList = new Address[1];
-                    addressList[0] = new InternetAddress(to);
-                }
-                for (int i = 0; i < addressList.length; i++) {
-                    message.addRecipient(Message.RecipientType.TO, addressList[i]);
-                }
-                message.setSubject(subject);
-                message.setFrom(new InternetAddress(SettingsDTO.readDtoFromFile().getUsername()));
-                Multipart content = new MimeMultipart();
-                BodyPart text = new MimeBodyPart();
-                text.setContent(editor.getHtmlText(), "text/html");
-                content.addBodyPart(text);
-                if (!files.isEmpty()) {
-                    for (File file : files) {
-                        BodyPart part = new MimeBodyPart();
-                        part.setFileName(file.getName());
-                        part.setDisposition(Part.ATTACHMENT);
-                        part.setDataHandler(new DataHandler(new FileDataSource(file)));
-                        content.addBodyPart(part);
+                    message.setContent(content);
+                    Folder draft = null;
+                    if (setting.getUsername().contains("gmail.com")) {
+                        draft = MailTest.getInbox().getStore().getFolder("[Gmail]/Drafts");
+                    } else {
+                        draft = MailTest.getInbox().getStore().getFolder("Drafts");
                     }
-                }
-                message.setContent(content);
-                Folder draft = null;
-                if (SettingsDTO.readDtoFromFile().getUsername().contains("gmail.com")) {
-                    draft = MailTest.getInbox().getStore().getFolder("[Gmail]/Drafts");
+                    message.setFlag(Flags.Flag.DRAFT, true);
+                    Message[] helper = new Message[1];
+                    helper[0] = message;
+                    if (!draft.isOpen()) {
+                        draft.open(Folder.READ_WRITE);
+                    }
+                    draft.appendMessages(helper);
+                    draft.expunge();
                 } else {
-                    draft = MailTest.getInbox().getStore().getFolder("Drafts");
+                    JOptionPane.showMessageDialog(null, "Please enter at least one recipient.", "Error!", JOptionPane.ERROR_MESSAGE);
                 }
-                message.setFlag(Flags.Flag.DRAFT, true);
-                Message[] helper = new Message[1];
-                helper[0] = message;
-                if (!draft.isOpen()) {
-                    draft.open(Folder.READ_WRITE);
-                }
-                draft.appendMessages(helper);
-                draft.expunge();
-            } else {
-                JOptionPane.showMessageDialog(null, "Please enter at least one recipient.", "Error!", JOptionPane.ERROR_MESSAGE);
+            } catch (AddressException ex) {
+                Logger.getLogger(SendSceneController.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (MessagingException ex) {
+                Logger.getLogger(SendSceneController.class.getName()).log(Level.SEVERE, null, ex);
             }
-        } catch (IOException | ClassNotFoundException | NoSuchProviderException ex) {
-            Logger.getLogger(SendSceneController.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (AddressException ex) {
-            Logger.getLogger(SendSceneController.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (MessagingException ex) {
-            Logger.getLogger(SendSceneController.class.getName()).log(Level.SEVERE, null, ex);
+            MainSceneController.setIsReplyMode(false);
+            MainSceneController.setReplyDto(null);
+            MainSceneController.setReplyMessage(null);
+            closeWindow();
+        } else {
+            JOptionPane.showMessageDialog(null, "Cannot find settings.", "Error!", JOptionPane.ERROR_MESSAGE);
         }
-        MainSceneController.setIsReplyMode(false);
-        MainSceneController.setReplyDto(null);
-        MainSceneController.setReplyMessage(null);
-        closeWindow();
     }
 
     private void closeWindow() {

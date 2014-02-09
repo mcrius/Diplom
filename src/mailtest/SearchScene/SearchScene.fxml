@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import java.util.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.web.*?>
+
+<AnchorPane id="AnchorPane" maxHeight="-Infinity" maxWidth="-Infinity" prefHeight="740.0" prefWidth="924.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/2.2" fx:controller="mailtest.SearchScene.SearchSceneController">
+  <children>
+    <GridPane prefHeight="740.0" prefWidth="924.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <children>
+        <GridPane prefHeight="141.0" style="-fx-background-color: #eee&#10;&#10;" GridPane.columnIndex="0" GridPane.rowIndex="0">
+          <children>
+            <Label text="To:" GridPane.columnIndex="0" GridPane.rowIndex="0">
+              <GridPane.margin>
+                <Insets left="15.0" fx:id="x1" />
+              </GridPane.margin>
+            </Label>
+            <TextField fx:id="toField" prefHeight="21.0" prefWidth="691.0" GridPane.columnIndex="1" GridPane.rowIndex="0">
+              <tooltip>
+                <Tooltip text="Enter a recipient. If there is more than one you can divide them with a comma" />
+              </tooltip>
+            </TextField>
+            <Label text="From:" GridPane.columnIndex="0" GridPane.margin="$x1" GridPane.rowIndex="1" />
+            <TextField id="subjectField" fx:id="fromField" prefWidth="200.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+              <tooltip>
+                <Tooltip text="The subject for the message." />
+              </tooltip>
+            </TextField>
+            <Label text="cc:" GridPane.columnIndex="0" GridPane.rowIndex="2">
+              <GridPane.margin>
+                <Insets left="15.0" fx:id="x1" />
+              </GridPane.margin>
+            </Label>
+            <TextField id="toField" fx:id="ccField" prefHeight="21.0" prefWidth="691.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
+              <tooltip>
+                <Tooltip text="Enter a recipient. If there is more than one you can divide them with a comma" />
+              </tooltip>
+            </TextField>
+            <Label text="Subject:" GridPane.columnIndex="0" GridPane.rowIndex="3">
+              <GridPane.margin>
+                <Insets left="15.0" fx:id="x1" />
+              </GridPane.margin>
+            </Label>
+            <TextField id="toField" fx:id="subjectField" prefHeight="21.0" prefWidth="691.0" GridPane.columnIndex="1" GridPane.rowIndex="3">
+              <tooltip>
+                <Tooltip text="Enter a recipient. If there is more than one you can divide them with a comma" />
+              </tooltip>
+            </TextField>
+            <Label text="Body:" GridPane.columnIndex="0" GridPane.rowIndex="4">
+              <GridPane.margin>
+                <Insets left="15.0" fx:id="x1" />
+              </GridPane.margin>
+            </Label>
+            <TextField id="toField" fx:id="bodyField" prefHeight="21.0" prefWidth="553.0" GridPane.columnIndex="1" GridPane.rowIndex="4">
+              <tooltip>
+                <Tooltip text="Enter a recipient. If there is more than one you can divide them with a comma" />
+              </tooltip>
+            </TextField>
+            <Label text="Search in:" GridPane.columnIndex="2" GridPane.rowIndex="0">
+              <GridPane.margin>
+                <Insets left="5.0" fx:id="x3" />
+              </GridPane.margin>
+            </Label>
+            <RadioButton fx:id="cacheRadio" mnemonicParsing="false" selected="true" text="Cache" GridPane.columnIndex="2" GridPane.rowIndex="1">
+              <toggleGroup>
+                <ToggleGroup fx:id="group" />
+              </toggleGroup>
+              <GridPane.margin>
+                <Insets left="10.0" fx:id="x2" />
+              </GridPane.margin>
+            </RadioButton>
+            <RadioButton fx:id="entireRadio" mnemonicParsing="false" text="Entire account" toggleGroup="$group" GridPane.columnIndex="2" GridPane.margin="$x2" GridPane.rowIndex="2" />
+            <Button fx:id="searchButton" mnemonicParsing="false" onAction="#handleSearch" text="Search" GridPane.columnIndex="2" GridPane.margin="$x3" GridPane.rowIndex="4" />
+          </children>
+          <columnConstraints>
+            <ColumnConstraints hgrow="NEVER" maxWidth="392.0" minWidth="10.0" prefWidth="77.0" />
+            <ColumnConstraints hgrow="ALWAYS" maxWidth="694.0" minWidth="10.0" prefWidth="553.0" />
+            <ColumnConstraints hgrow="ALWAYS" maxWidth="694.0" minWidth="10.0" prefWidth="170.0" />
+          </columnConstraints>
+          <rowConstraints>
+            <RowConstraints maxHeight="26.0" minHeight="10.0" prefHeight="26.0" vgrow="SOMETIMES" />
+            <RowConstraints maxHeight="26.0" minHeight="10.0" prefHeight="26.0" vgrow="SOMETIMES" />
+            <RowConstraints maxHeight="26.0" minHeight="10.0" prefHeight="26.0" vgrow="SOMETIMES" />
+            <RowConstraints maxHeight="26.0" minHeight="10.0" prefHeight="26.0" vgrow="SOMETIMES" />
+            <RowConstraints maxHeight="26.0" minHeight="10.0" prefHeight="26.0" vgrow="SOMETIMES" />
+          </rowConstraints>
+        </GridPane>
+        <WebView fx:id="webView" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="0" GridPane.rowIndex="3" />
+        <TableView fx:id="table" prefHeight="200.0" prefWidth="200.0" GridPane.columnIndex="0" GridPane.rowIndex="2">
+          <columns>
+            <TableColumn prefWidth="75.0" text="From" fx:id="fromColumn" />
+            <TableColumn prefWidth="75.0" text="Subject" fx:id="subjectColumn" />
+            <TableColumn prefWidth="75.0" text="Received" fx:id="receivedColumn" />
+          </columns>
+        </TableView>
+        <Label text="Search Results:" GridPane.columnIndex="0" GridPane.margin="$x2" GridPane.rowIndex="1" />
+        <ProgressIndicator fx:id="progress" progress="-1.0" visible="false" GridPane.columnIndex="0" GridPane.rowIndex="4" />
+      </children>
+      <columnConstraints>
+        <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+      </columnConstraints>
+      <rowConstraints>
+        <RowConstraints maxHeight="300.0" minHeight="10.0" prefHeight="142.0" vgrow="NEVER" />
+        <RowConstraints maxHeight="540.0" minHeight="10.0" prefHeight="25.0" vgrow="ALWAYS" />
+        <RowConstraints maxHeight="540.0" minHeight="10.0" prefHeight="191.0" vgrow="ALWAYS" />
+        <RowConstraints maxHeight="569.0" minHeight="10.0" prefHeight="354.0" vgrow="ALWAYS" />
+        <RowConstraints maxHeight="540.0" minHeight="9.0" prefHeight="28.0" vgrow="ALWAYS" />
+      </rowConstraints>
+    </GridPane>
+  </children>
+</AnchorPane>

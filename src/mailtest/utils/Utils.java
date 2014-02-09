@@ -18,10 +18,15 @@ import javax.mail.Multipart;
 import javax.mail.Part;
 import javax.mail.internet.MimeUtility;
 import mailtest.MailTest;
-import mailtest.dto.MessageDTO;
 import mailtest.jpa.entities.AttachmentName;
 import mailtest.jpa.entities.MailMessage;
 import mailtest.jpa.entities.SettingsProperty;
+import org.apache.lucene.document.Document;
+import org.apache.lucene.document.Field;
+import org.apache.lucene.document.FieldType;
+import org.apache.lucene.document.StoredField;
+import org.apache.lucene.index.IndexWriter;
+import org.jsoup.Jsoup;
 
 /**
  *
@@ -172,11 +177,11 @@ public class Utils {
                         }
                     }
                 } catch (MessagingException | IOException ex) {
-                    Logger.getLogger(MessageDTO.class.getName()).log(Level.SEVERE, null, ex);
+                    Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         } catch (MessagingException ex) {
-            Logger.getLogger(MessageDTO.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
         }
         return files;
     }
@@ -213,11 +218,11 @@ public class Utils {
                             }
                         }
                     } catch (MessagingException | IOException ex) {
-                        Logger.getLogger(MessageDTO.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
             } catch (MessagingException ex) {
-                Logger.getLogger(MessageDTO.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
             }
             return streams.toArray(new InputStream[streams.size()]);
         } catch (MessagingException ex) {
@@ -259,17 +264,43 @@ public class Utils {
                             }
                         }
                     } catch (MessagingException | IOException ex) {
-                        Logger.getLogger(MessageDTO.class.getName()).log(Level.SEVERE, null, ex);
+                        Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
                     }
                 }
             } catch (MessagingException ex) {
-                Logger.getLogger(MessageDTO.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
             }
 
         } catch (MessagingException ex) {
-            Logger.getLogger(MessageDTO.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(Utils.class.getName()).log(Level.SEVERE, null, ex);
         }
         return streams.toArray(new InputStream[streams.size()]);
     }
+    
+    
+    public static void addMessageToIndex(IndexWriter w, MailMessage mm) throws IOException{
+        Document document = new Document();
+        FieldType type = new FieldType();
+        type.setIndexed(true);
+        type.setTokenized(true);
+        type.setStored(true);
+        type.setStoreTermVectors(true);
+        type.setStoreTermVectorPositions(true);
+        type.freeze();
+        
+        document.add(new StoredField("messageId", mm.getMessageId()));
+        document.add(new Field("from", mm.getFrom(), type));
+        document.add(new Field("to", mm.getTo(), type));
+        document.add(new Field("cc", mm.getCc(), type));
+        document.add(new Field("subject", mm.getSubject(), type));
+        document.add(new Field("body", parseHTML(mm.getBody()), type));
+        w.addDocument(document);
+    }
+    
+    
+    public static String parseHTML(String html){
+        return Jsoup.parse(html).text();
+    }
+    
 }
 

@@ -5,10 +5,11 @@
 <?import javafx.geometry.*?>
 <?import javafx.scene.*?>
 <?import javafx.scene.control.*?>
+<?import javafx.scene.effect.*?>
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.web.*?>
 
-<AnchorPane id="AnchorPane" prefHeight="600.0" prefWidth="800.0" xmlns:fx="http://javafx.com/fxml" fx:controller="mailtest.MainScene.MainSceneController">
+<AnchorPane id="AnchorPane" prefHeight="600.0" prefWidth="800.0" xmlns:fx="http://javafx.com/fxml/1" xmlns="http://javafx.com/javafx/2.2" fx:controller="mailtest.MainScene.MainSceneController">
   <children>
     <BorderPane prefHeight="600.0" prefWidth="800.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
       <bottom>
@@ -146,9 +147,9 @@
         </SplitPane>
       </center>
       <top>
-        <GridPane id="GridPane" prefHeight="21.0" prefWidth="600.0000999999975">
+        <GridPane id="GridPane" prefHeight="21.0" prefWidth="596.0" style="-fx-background-color: grey;&#10;">
           <children>
-            <MenuBar prefHeight="443.0" prefWidth="600.0000999999975" GridPane.columnIndex="0" GridPane.rowIndex="0">
+            <MenuBar prefHeight="24.0" prefWidth="736.0" GridPane.columnIndex="0" GridPane.rowIndex="0">
               <menus>
                 <Menu mnemonicParsing="false" text="File">
                   <items>
@@ -168,6 +169,8 @@
                     <MenuItem mnemonicParsing="false" onAction="#forwardAction" text="Forward" />
                     <MenuItem mnemonicParsing="false" onAction="#archiveMessage" text="Archive" />
                     <MenuItem mnemonicParsing="false" onAction="#deleteMessage" text="Delete" />
+                    <SeparatorMenuItem mnemonicParsing="false" />
+                    <MenuItem mnemonicParsing="false" onAction="#showSearch" text="Search" />
                   </items>
                 </Menu>
                 <Menu mnemonicParsing="false" text="Help">
@@ -177,9 +180,15 @@
                 </Menu>
               </menus>
             </MenuBar>
+            <TextField alignment="CENTER_LEFT" maxWidth="165.0" minWidth="-Infinity" opacity="1.0" prefWidth="164.0" promptText="Search..." style="-fx-border: none;-fx-text-fill: black;-fx-background-color: linear-gradient(to bottom, -fx-base, derive(-fx-base,60%));" GridPane.columnIndex="1" GridPane.rowIndex="0">
+              <effect>
+                <Glow level="0.1742138364779874" />
+              </effect>
+            </TextField>
           </children>
           <columnConstraints>
-            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+            <ColumnConstraints hgrow="SOMETIMES" maxWidth="-1.0" minWidth="10.0" prefWidth="637.0" />
+            <ColumnConstraints fillWidth="false" hgrow="SOMETIMES" maxWidth="165.0" minWidth="10.0" prefWidth="165.0" />
           </columnConstraints>
           <rowConstraints>
             <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />

@@ -21,7 +21,9 @@ import javafx.scene.control.TableView;
 import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
-import mailtest.dto.MessageDTO;
+import mailtest.MailTest;
+import mailtest.jpa.controllers.MailMessageJpaController;
+import mailtest.jpa.entities.MailMessage;
 
 /**
  *
@@ -46,57 +48,63 @@ public class MessageListener implements Runnable{
     
     @Override
     public void run() {
-        final List<MessageDTO> newM = new ArrayList<>();
-        List<MessageDTO> old = new ArrayList<>();
-        int lastCount = 0;
         try {
+            final List<MailMessage> newM = new ArrayList<>();
+            int lastCount = 0;
+            MailMessageJpaController mmc = new MailMessageJpaController(MailTest.getEmf());
             lastCount = folder.getMessageCount();
             while(true){
-                int newMessageCount = folder.getMessageCount();
-                if (newMessageCount > lastCount) {
-                    Platform.runLater(new Runnable() {
-
-                        @Override
-                        public void run() {
-                            label.setText("Updating Inbox.");
-                            label.setVisible(true);
-                            pi.setVisible(true);
+                try {
+                    int newMessageCount = folder.getMessageCount();
+                    if (newMessageCount > lastCount) {
+                        try {
+                            Platform.runLater(new Runnable() {
+                                
+                                @Override
+                                public void run() {
+                                    label.setText("Updating Inbox.");
+                                    label.setVisible(true);
+                                    pi.setVisible(true);
+                                }
+                            });
+                            Message[] messages = folder.getMessages(folder.getMessageCount() - (newMessageCount - lastCount), folder.getMessageCount());
+                            for (int i = 0; i < messages.length; i++) {
+                                MailMessage mm = new MailMessage(messages[i]);
+                                mmc.create(mm);
+                                newM.add(mm);
+                            }
+                            Platform.runLater(new Runnable() {
+                                
+                                @Override
+                                public void run() {
+                                    table.getItems().addAll(newM);
+                                }
+                            });
+                            Platform.runLater(new Runnable(){
+                                
+                                @Override
+                                public void run() {
+                                    label.setText("Done.");
+                                    label.setVisible(false);
+                                    pi.setVisible(false);
+                                }
+                                
+                            });
+                            lastCount = newMessageCount;
+                        } catch (MessagingException ex) {
+                            Logger.getLogger(MessageListener.class.getName()).log(Level.SEVERE, null, ex);
                         }
-                    });
-                    Message[] messages = folder.getMessages(folder.getMessageCount() - (newMessageCount - lastCount), folder.getMessageCount());
-                    try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(new File("cache.blurp")))) {
-                        old = (List<MessageDTO>) in.readObject();
                     }
-                    for (int i = 0; i < messages.length; i++) {
-                        newM.add(new MessageDTO(messages[i]));
+                    try {
+                        Thread.sleep(10 * 1000);
+                    } catch (InterruptedException ex) {
+                        Logger.getLogger(MessageListener.class.getName()).log(Level.SEVERE, null, ex);
                     }
-                    Platform.runLater(new Runnable() {
-
-                        @Override
-                        public void run() {
-                            table.getItems().addAll(newM);
-                        }
-                    });
-                    old.addAll(newM);
-                    try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(new File("cache.blurp")))) {
-                        out.writeObject(old);
-                        out.flush();
-                    }
-                    Platform.runLater(new Runnable(){
-
-                        @Override
-                        public void run() {
-                            label.setText("Done.");
-                            label.setVisible(false);
-                            pi.setVisible(false);
-                        }
-                        
-                    });
-                    lastCount = newMessageCount;
+                } catch (MessagingException ex) {
+                    Logger.getLogger(MessageListener.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                Thread.sleep(10 * 1000);
             }
-        } catch (MessagingException | ClassNotFoundException | InterruptedException | IOException ex) {
+        } catch (MessagingException ex) {
             Logger.getLogger(MessageListener.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
