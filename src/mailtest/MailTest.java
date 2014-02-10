@@ -234,6 +234,7 @@ public class MailTest extends Application {
 
             @Override
             public void handle(WindowEvent t) {
+                MailTest.getEmf().close();
                 MainSceneController.t.interrupt();
             }
         });

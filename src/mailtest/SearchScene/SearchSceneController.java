@@ -9,8 +9,6 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
@@ -27,11 +25,8 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import mailtest.jpa.entities.MailMessage;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
-import org.apache.lucene.queryparser.classic.MultiFieldQueryParser;
-import org.apache.lucene.queryparser.classic.ParseException;
-import org.apache.lucene.search.Query;
-import org.apache.lucene.util.Version;
+import mailtest.runnables.SearchInMailThread;
+import mailtest.runnables.SearchThread;
 
 /**
  * FXML Controller class
@@ -42,7 +37,7 @@ public class SearchSceneController implements Initializable {
 
     public static final String[] FIELDS = new String[] {"from", "to", "cc", "subject", "body"};
     List<MailMessage> results;
-    @FXML private TableView<MailMessage> table;
+    @FXML private static TableView<MailMessage> table;
     @FXML private Button searchButton;
     @FXML private TextField toField;
     @FXML private TextField fromField;
@@ -54,7 +49,7 @@ public class SearchSceneController implements Initializable {
     @FXML private TableColumn fromColumn;
     @FXML private TableColumn subjectColumn;
     @FXML private TableColumn receivedColumn;
-    @FXML private ProgressIndicator progress;
+    @FXML private static ProgressIndicator progress;
     @FXML private WebView webView;
 
     
@@ -99,16 +94,31 @@ public class SearchSceneController implements Initializable {
     
     @FXML
     public void handleSearch(ActionEvent e){
-        //TODO GENERATE QUERY
-        StandardAnalyzer a = new StandardAnalyzer(Version.LUCENE_45);
-        MultiFieldQueryParser parser = new MultiFieldQueryParser(Version.LUCENE_45, FIELDS, a);
-//        try {
-//            Query q = parser.parse(query);
-//        } catch (ParseException ex) {
-//            Logger.getLogger(SearchSceneController.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-        
-        
+        boolean searchInCache = cacheRadio.isSelected();
+        boolean searchInAcc = entireRadio.isSelected();
+        if (searchInCache) {
+            SearchThread searchThread = new SearchThread(fromField.getText(), toField.getText(),
+                    ccField.getText(), subjectField.getText(), bodyField.getText());
+            Thread t = new Thread(searchThread);
+            t.start();
+        }else{
+            if (searchInAcc) {
+                SearchInMailThread simt = new SearchInMailThread(fromField.getText(), toField.getText(),
+                    ccField.getText(), subjectField.getText(), bodyField.getText());
+                Thread t = new Thread(simt);
+                t.start();
+            }
+        }
     }
+
+    public static TableView<MailMessage> getTable() {
+        return table;
+    }
+
+    public static ProgressIndicator getProgress() {
+        return progress;
+    }
+    
+    
     
 }

@@ -175,6 +175,16 @@ public class MailMessageJpaController implements Serializable {
         }
     }
 
+    public MailMessage findMailMessageByMessageId(Integer id) {
+        EntityManager em = getEntityManager();
+        try {
+            return (MailMessage) em.createNamedQuery("MailMessage.findByMessageId").setParameter("messageId", id).getSingleResult();
+//            return em.find(MailMessage.class, id);
+        } finally {
+            em.close();
+        }
+    }
+
     public int getMailMessageCount() {
         EntityManager em = getEntityManager();
         try {

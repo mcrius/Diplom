@@ -16,6 +16,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Temporal;
 import mailtest.utils.Utils;
@@ -25,6 +27,8 @@ import mailtest.utils.Utils;
  * @author bzzzt
  */
 @Entity
+@NamedQueries({
+@NamedQuery(name = "MailMessage.findByMessageId", query = "SELECT m from MailMessage m where m.messageId = :messageId")})
 public class MailMessage implements Serializable {
     private static final long serialVersionUID = 1L;
     @Id

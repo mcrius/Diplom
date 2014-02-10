@@ -289,11 +289,11 @@ public class Utils {
         type.freeze();
         
         document.add(new StoredField("messageId", mm.getMessageId()));
-        document.add(new Field("from", mm.getFrom(), type));
-        document.add(new Field("to", mm.getTo(), type));
-        document.add(new Field("cc", mm.getCc(), type));
-        document.add(new Field("subject", mm.getSubject(), type));
-        document.add(new Field("body", parseHTML(mm.getBody()), type));
+        document.add(new Field("from", mm.getFrom().toLowerCase().trim(), type));
+        document.add(new Field("to", mm.getTo().toLowerCase().trim(), type));
+        document.add(new Field("cc", mm.getCc().toLowerCase().trim(), type));
+        document.add(new Field("subject", mm.getSubject().toLowerCase().trim(), type));
+        document.add(new Field("body", parseHTML(mm.getBody()).toLowerCase().trim(), type));
         w.addDocument(document);
     }
     
