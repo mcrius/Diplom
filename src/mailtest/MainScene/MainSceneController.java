@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
@@ -21,6 +22,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -34,10 +36,13 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.web.WebView;
 import javafx.stage.DirectoryChooser;
@@ -67,6 +72,19 @@ import mailtest.jpa.entities.Setting;
 import mailtest.runnables.MessageListener;
 import mailtest.runnables.OpenFolderRun;
 import mailtest.utils.Utils;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
+import org.apache.lucene.index.DirectoryReader;
+import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
+import org.apache.lucene.search.FuzzyQuery;
+import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TopScoreDocCollector;
+import org.apache.lucene.store.Directory;
+import org.apache.lucene.util.Version;
 
 /**
  * FXML Controller class
@@ -75,6 +93,8 @@ import mailtest.utils.Utils;
  */
 public class MainSceneController implements Initializable {
 
+    public static final String[] FIELDS = new String[] {"from", "to", "cc", "subject", "body"};
+    
     @FXML
     private TableView table;
     @FXML
@@ -99,6 +119,8 @@ public class MainSceneController implements Initializable {
     private Label statusLabel;
     @FXML
     private ProgressIndicator indicator;
+    @FXML
+    private TextField searchField;
     public static List<MailMessage> messages = new ArrayList<>();
     public static Thread t;
     private static Message replyMessage;
@@ -140,6 +162,33 @@ public class MainSceneController implements Initializable {
     }
 
     public void init() {
+        
+        searchField.addEventFilter(KeyEvent.ANY, new EventHandler<KeyEvent>() {
+
+            @Override
+            public void handle(KeyEvent t) {
+                if (t.getCode().equals(KeyCode.ENTER)) {
+                    if (!searchField.getText().isEmpty()) {
+                        final List<MailMessage> results = searchMessages(searchField.getText().trim());
+                        if (!results.isEmpty()) {
+                            Platform.runLater(new Runnable() {
+
+                                @Override
+                                public void run() {
+                                    table.getItems().clear();
+                                    table.getItems().addAll(results);
+                                }
+                            }
+                            );
+                        }else{
+                            table.getItems().clear();
+                            table.getItems().addAll(messages);
+                        }
+                    }
+                    t.consume();
+                }
+            }
+        });
         indicator.setVisible(true);
         SettingController sc = new SettingController(MailTest.getEmf());
         List<Setting> settings = sc.findSettingEntities(1, 0);
@@ -604,5 +653,40 @@ public class MainSceneController implements Initializable {
         } catch (IOException ex) {
             Logger.getLogger(MainSceneController.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    
+    private List<MailMessage> searchMessages(String term){
+        List<MailMessage> results = new ArrayList<>();
+        if (term.isEmpty()) {
+            results = Collections.EMPTY_LIST;
+        }else{
+            
+            BooleanQuery bq = new BooleanQuery();
+            Analyzer a = new StandardAnalyzer(Version.LUCENE_45);
+            for (String field : FIELDS) {
+                FuzzyQuery fq = new FuzzyQuery(new Term(field, term));
+                bq.add(fq, BooleanClause.Occur.SHOULD);
+            }
+            try {
+                IndexReader reader = DirectoryReader.open(MailTest.getIndex());
+                IndexSearcher searcher = new IndexSearcher(reader);
+                TopScoreDocCollector collector = TopScoreDocCollector.create(100, true);
+                searcher.search(bq, collector);
+                ScoreDoc[] hits = collector.topDocs().scoreDocs;
+                MailMessageJpaController mmc = new MailMessageJpaController(MailTest.getEmf());
+                for (ScoreDoc hit : hits) {
+                    int docId = hit.doc;
+                    int messageId = reader.document(docId).getField("messageId").numericValue().intValue();
+                    MailMessage mm = mmc.findMailMessageByMessageId(messageId);
+                    String body = mm.getBody();
+                    mm.setBody(body.replaceAll(term, String.format("<span style=\"background-color:yellow\"> %s </span>", term)));
+                    results.add(mm);
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(MainSceneController.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+        }
+        return results;
     }
 }

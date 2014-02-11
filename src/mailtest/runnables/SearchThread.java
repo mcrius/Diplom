@@ -13,7 +13,6 @@ import java.util.logging.Logger;
 import javafx.application.Platform;
 import mailtest.MailTest;
 import mailtest.SearchScene.SearchSceneController;
-import static mailtest.SearchScene.SearchSceneController.FIELDS;
 import mailtest.jpa.controllers.MailMessageJpaController;
 import mailtest.jpa.entities.MailMessage;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
@@ -110,54 +109,53 @@ public class SearchThread implements Runnable {
             bq.add(fuzzyQuery, BooleanClause.Occur.SHOULD);
             searchFields.add(SearchSceneController.FIELDS[4]);
         }
-
-        StandardAnalyzer a = new StandardAnalyzer(Version.LUCENE_45);
-        try (IndexReader reader = DirectoryReader.open(MailTest.getIndex())) {
-            IndexSearcher searcher = new IndexSearcher(reader);
-            TopScoreDocCollector collector = TopScoreDocCollector.create(maxResults, true);
-            searcher.search(bq, collector);
-            ScoreDoc[] hits = collector.topDocs().scoreDocs;
-            MailMessageJpaController mmc = new MailMessageJpaController(MailTest.getEmf());
-            for (ScoreDoc scoreDoc : hits) {
-                int docId = scoreDoc.doc;
-                int messageId = reader.document(docId).getField("messageId").numericValue().intValue();
-                final MailMessage mm = mmc.findMailMessageByMessageId(messageId);
-                String body = mm.getBody();
-                if (!fromField.equals("")) {
-                    body = body.replaceAll(fromField, String.format("<span style=\"background-color:yellow\"> %s </span>", fromField));
+        try (StandardAnalyzer a = new StandardAnalyzer(Version.LUCENE_45)) {
+            try (IndexReader reader = DirectoryReader.open(MailTest.getIndex())) {
+                IndexSearcher searcher = new IndexSearcher(reader);
+                TopScoreDocCollector collector = TopScoreDocCollector.create(maxResults, true);
+                searcher.search(bq, collector);
+                ScoreDoc[] hits = collector.topDocs().scoreDocs;
+                MailMessageJpaController mmc = new MailMessageJpaController(MailTest.getEmf());
+                for (ScoreDoc scoreDoc : hits) {
+                    int docId = scoreDoc.doc;
+                    int messageId = reader.document(docId).getField("messageId").numericValue().intValue();
+                    final MailMessage mm = mmc.findMailMessageByMessageId(messageId);
+                    String body = mm.getBody();
+                    if (!fromField.equals("")) {
+                        body = body.replaceAll(fromField, String.format("<span style=\"background-color:yellow\"> %s </span>", fromField));
+                    }
+                    if (!toField.equals("")) {
+                        body = body.replaceAll(toField, String.format("<span style=\"background-color:yellow\"> %s </span>", toField));
+                    }
+                    if (!ccField.equals("")) {
+                        body = body.replaceAll(ccField, String.format("<span style=\"background-color:yellow\"> %s </span>", ccField));
+                    }
+                    if (!subjectField.equals("")) {
+                        body = body.replaceAll(subjectField, String.format("<span style=\"background-color:yellow\"> %s </span>", subjectField));
+                    }
+                    if (!bodyField.equals("")) {
+                        body = body.replaceAll(bodyField, String.format("<span style=\"background-color:yellow\"> %s </span>", bodyField));
+                    }
+                    mm.setBody(body);
+                    Platform.runLater(new Runnable() {
+                        
+                        @Override
+                        public void run() {
+                            SearchSceneController.getTable().getItems().add(mm);
+                        }
+                    });
                 }
-                if (!toField.equals("")) {
-                    body = body.replaceAll(toField, String.format("<span style=\"background-color:yellow\"> %s </span>", toField));
-                }
-                if (!ccField.equals("")) {
-                    body = body.replaceAll(ccField, String.format("<span style=\"background-color:yellow\"> %s </span>", ccField));
-                }
-                if (!subjectField.equals("")) {
-                    body = body.replaceAll(subjectField, String.format("<span style=\"background-color:yellow\"> %s </span>", subjectField));
-                }
-                if (!bodyField.equals("")) {
-                    body = body.replaceAll(bodyField, String.format("<span style=\"background-color:yellow\"> %s </span>", bodyField));
-                }
-                mm.setBody(body);
                 Platform.runLater(new Runnable() {
 
                     @Override
                     public void run() {
-                        SearchSceneController.getTable().getItems().add(mm);
+                        SearchSceneController.getProgress().setVisible(false);
                     }
                 });
+            } catch (IOException ex) {
+                Logger.getLogger(SearchSceneController.class.getName()).log(Level.SEVERE, null, ex);
             }
-            Platform.runLater(new Runnable() {
-
-                @Override
-                public void run() {
-                    SearchSceneController.getProgress().setVisible(false);
-                }
-            });
-        } catch (IOException ex) {
-            Logger.getLogger(SearchSceneController.class.getName()).log(Level.SEVERE, null, ex);
         }
-        a.close();
 
     }
 

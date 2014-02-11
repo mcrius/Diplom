@@ -180,7 +180,7 @@
                 </Menu>
               </menus>
             </MenuBar>
-            <TextField alignment="CENTER_LEFT" maxWidth="165.0" minWidth="-Infinity" opacity="1.0" prefWidth="164.0" promptText="Search..." style="-fx-border: none;-fx-text-fill: black;-fx-background-color: linear-gradient(to bottom, -fx-base, derive(-fx-base,60%));" GridPane.columnIndex="1" GridPane.rowIndex="0">
+            <TextField fx:id="searchField" alignment="CENTER_LEFT" maxWidth="165.0" minWidth="-Infinity" opacity="1.0" prefWidth="164.0" promptText="Search..." style="-fx-border: none;-fx-text-fill: black;-fx-background-color: linear-gradient(to bottom, -fx-base, derive(-fx-base,60%));" GridPane.columnIndex="1" GridPane.rowIndex="0">
               <effect>
                 <Glow level="0.1742138364779874" />
               </effect>
